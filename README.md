@@ -89,7 +89,7 @@ pip install pypng
 then, download a script for mnist from our Base repository
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/adansons/base/main/download_mnist.py
+curl -sSL https://raw.githubusercontent.com/adansons/base/main/download_mnist.py > download_mnist.py
 ```
 
 run download-mnist script. you can specify any folder for downloading as last argument(default “~/dataset/mnist”). if you run this command on Windows, please replace it to windows path like “C:\dataset\mnist”
