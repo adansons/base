@@ -120,7 +120,7 @@ after downloading, you can see data files in ~/dataset/mnist.
 
 ### Step 1. create new project
 
-create mnist project with `[base new <project>](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#70af41e65b51453f9b6807dc29354002)` command.
+create mnist project with [base new <project>](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#70af41e65b51453f9b6807dc29354002) command.
 
 ```bash
 base new mnist
@@ -221,7 +221,7 @@ you can use `--conditions <value-only-search>` option for magical search filter 
 
 be careful that you may get so large output on your console without `-s, --summary` option.
 
-(check `[search docs](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#698aab257e884e6a82cf470ec7f459dc)` for more information).
+(check [search docs](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#698aab257e884e6a82cf470ec7f459dc) for more information).
 
 ```bash
 base search mnist --conditions "train" --query "label in ['1','2','3']"
@@ -244,7 +244,7 @@ base search mnist --conditions "train" --query "label in ['1','2','3']"
 
 ### Step 5. filter and export dataset with Python SDK
 
-in python script, you can filter and export dataset easily and simply with `Project class` and `Files class`. (see `[SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-9155322393ee417a967a8e05817e8b25)`)
+in python script, you can filter and export dataset easily and simply with `Project class` and `Files class`. (see [SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-9155322393ee417a967a8e05817e8b25))
 
 ```python
 from base import Project, Dataset
