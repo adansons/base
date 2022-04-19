@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "base"
+version = "0.1.0"
+description = "Adansons Base"
+authors = ["Adansons Developers <engineer@adansons.co.jp>"]
+packages = [
+    { include = "base"},
+]
+
+[tool.poetry.scripts]
+base = 'base.cli:main'
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "==8.0.4"
+requests = ">=1.0.0"
+numpy = ">=1.15"
+scikit-learn = ">=0.10"
+
+[tool.poetry.dev-dependencies]
+black = "^21.12b0"
+pytest = "^6.2.5"
+mypy = "^0.931"
+boto3 = "^1.21.13"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
