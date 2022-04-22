@@ -235,7 +235,7 @@ def get_user_id_from_db(access_key: str) -> str:
 
     if res.status_code != 200:
         raise ValueError(
-            "Incorrect access key was specified. Please retry or ask support team."
+            "Incorrect access key was specified. Please retry or ask support team via Slack. \nIf you have not joined our Slack yet, get your invite here!\n-> https://share.hsforms.com/16OxTF7eJRPK92oGCny7nGw8moen\n"
         )
     user_id = res.json()["user_id"]
 
