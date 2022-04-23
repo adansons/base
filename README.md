@@ -281,7 +281,7 @@ so, you should exclude that files from your dataset to evaluate your AI models m
 
 ```python
 # you can exclude files which have "-1" on "correction" with below code
-eval_files = project.Files(conditions="test", query=["correction != -1"])
+eval_files = project.files(conditions="test", query=["correction != -1"])
 
 print(len(eval_files))
 # this returns the number of files matched with requested conditions or query
