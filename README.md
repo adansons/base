@@ -18,7 +18,7 @@
 
 ## Product Concept
 
-- Adansons Base is a data management tool that organizes meta-information of unstructured data and creates and organizes datasets.
+- Adansons Base is a data management tool that organizes metadata of unstructured data and creates and organizes datasets.
 - It makes dataset creation more effective and helps find essential insights from training results and improves AI performance.
 
 See also  ->   [Product page](https://adansons.wraptas.site)
