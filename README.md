@@ -251,7 +251,7 @@ from base import Project, Dataset
 
 # export dataset as you want to use
 project = Project("mnist")
-files = project.Files(conditions="train", query=["label in ['1','2','3']"])
+files = project.files(conditions="train", query=["label in ['1','2','3']"])
 
 print(files[0])
 # this returns path-like `File` object
