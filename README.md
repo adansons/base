@@ -298,4 +298,4 @@ eval_dataset = Dataset(eval_files, target_key="label", transform=preprocess_func
 
 ### 4.2 Python Reference
 
-[Python Reference](https://vast-bus-1c4.notion.site/Python-Reference-9155322393ee417a967a8e05817e8b25)
+[Python Reference](https://vast-bus-1c4.notion.site/Python-Reference-e4b62aee4eee47caa96b7f436d6658cd)
