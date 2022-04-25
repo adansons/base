@@ -1,12 +1,7 @@
 # Adansons Base Document
-### Type your email to get access key.
-↓↓↓
-
-[Invitation Form](https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen)
-
--------
 
 - [Product Concept](#product-concept)
+- [0. Get Access Key](#0-get-access-key)
 - [1. Installation](#1-installation)
 - [2. Configuration](#2-configuration)
   - [2.1 with CLI](#21-with-cli)
@@ -27,7 +22,17 @@
 - Adansons Base is a data management tool that organizes metadata of unstructured data and creates and organizes datasets.
 - It makes dataset creation more effective and helps find essential insights from training results and improves AI performance.
 
-More detail  ->   [Product page](https://adansons.wraptas.site)
+More detail
+↓↓↓
+
+See our product page: https://adansons.wraptas.site
+
+---
+## 0. Get Access Key
+
+Type your email to get access key.
+Invitation Form ↓
+https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen
 
 
 ## 1. Installation
