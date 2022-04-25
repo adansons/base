@@ -30,9 +30,9 @@ See our product page: https://adansons.wraptas.site
 ---
 ## 0. Get Access Key
 
-Type your email to get access key.
-Invitation Form ↓
-https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen
+Type your email into the form below to get the access key.
+
+Invitation Form: https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen
 
 
 ## 1. Installation
