@@ -1,5 +1,5 @@
 # Adansons Base Document
-### Type your email to get invitation.
+### Type your email to get access key.
 ↓↓↓
 
 [Invitation Form](https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen)
