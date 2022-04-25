@@ -30,7 +30,7 @@ See our product page: https://adansons.wraptas.site
 ---
 ## 0. Get Access Key
 
-Type your email into the form below to get the access key.
+Type your email into the form below to join our slack and get the access key.
 
 Invitation Form: https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen
 
@@ -53,7 +53,7 @@ when you run any Base CLI command for the first time, Base will ask your access 
 
 then, Base will verify the specified access key was correct.
 
-if you don't have any access key, please enter your email to [Get Invitation Form](https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen).
+if you don't have any access key, please see [0. Get Access Key](#0-get-access-key).
 
 this command will show you what projects you have
 
