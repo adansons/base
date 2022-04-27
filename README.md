@@ -279,6 +279,7 @@ x_train, x_test, y_train, y_test = dataset.train_test_split(split_rate=0.2)
 
 # or use with torch
 import torch
+import torchvision.transforms as transforms
 from PIL import Image
 
 def preprocess_func(path):
