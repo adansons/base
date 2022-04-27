@@ -1,6 +1,5 @@
 # Adansons Base Document
 
-- [Adansons Base Document](#adansons-base-document)
   - [Product Concept](#product-concept)
   - [0. Get Access Key](#0-get-access-key)
   - [1. Installation](#1-installation)
