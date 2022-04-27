@@ -1,21 +1,22 @@
 # Adansons Base Document
 
-- [Product Concept](#product-concept)
-- [0. Get Access Key](#0-get-access-key)
-- [1. Installation](#1-installation)
-- [2. Configuration](#2-configuration)
-  - [2.1 with CLI](#21-with-cli)
-  - [2.2 Environment Variables](#22-environment-variables)
-- [3. Tutorial 1: Organize meta data and Create dataset](#3-tutorial-1-organize-meta-data-and-create-dataset)
-  - [Step 0. prepare sample dataset](#step-0-prepare-sample-dataset)
-  - [Step 1. create new project](#step-1-create-new-project)
-  - [Step 2. import data files](#step-2-import-data-files)
-  - [Step 3. import external metadata files](#step-3-import-external-metadata-files)
-  - [Step 4. filter and export dataset with CLI](#step-4-filter-and-export-dataset-with-cli)
-  - [Step 5. filter and export dataset with Python SDK](#step-5-filter-and-export-dataset-with-python-sdk)
-- [4. API Reference](#4-api-reference)
-  - [1. Command Reference](#41-command-reference)
-  - [2. Python Reference](#42-python-reference)
+- [Adansons Base Document](#adansons-base-document)
+  - [Product Concept](#product-concept)
+  - [0. Get Access Key](#0-get-access-key)
+  - [1. Installation](#1-installation)
+  - [2. Configuration](#2-configuration)
+    - [2.1 with CLI](#21-with-cli)
+    - [2.2 Environment Variables](#22-environment-variables)
+  - [3. Tutorial 1: Organize meta data and Create dataset](#3-tutorial-1-organize-meta-data-and-create-dataset)
+    - [Step 0. prepare sample dataset](#step-0-prepare-sample-dataset)
+    - [Step 1. create new project](#step-1-create-new-project)
+    - [Step 2. import data files](#step-2-import-data-files)
+    - [Step 3. import external metadata files](#step-3-import-external-metadata-files)
+    - [Step 4. filter and export dataset with CLI](#step-4-filter-and-export-dataset-with-cli)
+    - [Step 5. filter and export dataset with Python SDK](#step-5-filter-and-export-dataset-with-python-sdk)
+  - [4. API Reference](#4-api-reference)
+    - [4.1 Command Reference](#41-command-reference)
+    - [4.2 Python Reference](#42-python-reference)
 
 
 ## Product Concept
@@ -279,6 +280,11 @@ x_train, x_test, y_train, y_test = dataset.train_test_split(split_rate=0.2)
 
 # or use with torch
 import torch
+from PIL import Image
+
+def preprocess_func(path):
+        image = transforms.ToTensor()(transforms.Resize((28, 28))(Image.open(path)))
+        return image
 
 dataset = Dataset(files, target_key="label", transform=preprocess_func)
 loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
