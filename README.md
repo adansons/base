@@ -262,6 +262,9 @@ in python script, you can filter and export dataset easily and simply with `Proj
 
 ```python
 from base import Project, Dataset
+import numpy as np
+from PIL import Image
+
 
 # export dataset as you want to use
 project = Project("mnist")
@@ -273,6 +276,15 @@ print(files[0])
 print(files[0].label)
 # this returns the value of attribute 'lable' of first `File` object
 # -> '0'
+
+# function to load image from path
+# this is necessary, if you want to use image in your dataset
+# because base Dataset class doesn't convert path to image
+def preprocess_func(path):
+    image = Image.open(path)
+    image = image.resize((28, 28))
+    image = np.array(image)
+    return image
 
 dataset = Dataset(files, target_key="label", transform=preprocess_func)
 x_train, x_test, y_train, y_test = dataset.train_test_split(split_rate=0.2)
