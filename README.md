@@ -258,7 +258,7 @@ base search mnist --conditions "train" --query "label in ['1','2','3']"
 
 ### Step 5. filter and export dataset with Python SDK
 
-in python script, you can filter and export dataset easily and simply with `Project class` and `Files class`. (see [SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-9155322393ee417a967a8e05817e8b25))
+in python script, you can filter and export dataset easily and simply with `Project class` and `Files class`. (see [SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-e4b62aee4eee47caa96b7f436d6658cd))
 
 ```python
 from base import Project, Dataset
