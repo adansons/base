@@ -25,7 +25,10 @@
 More detail
 ↓↓↓
 
-See our product page: https://adansons.wraptas.site
+- Medium
+  - https://medium.com/@KenichiHiguchi/3-things-you-need-to-deal-with-in-data-management-to-create-best-dataset-781177507fc2
+- Product Page
+  - https://adansons.wraptas.site
 
 ---
 ## 0. Get Access Key
