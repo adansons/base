@@ -22,6 +22,8 @@ black = "^21.12b0"
 pytest = "^6.2.5"
 mypy = "^0.931"
 boto3 = "^1.21.13"
+jupyter = "^1.0.0"
+jupyterlab = "^3.0.9"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
