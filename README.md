@@ -20,7 +20,7 @@
 
 ## Product Concept
 - Adansons Base is a data management tool that organizes metadata of unstructured data and creates and organizes datasets.
-- It makes dataset creation more effective and helps find essential insights from training results and improves AI performance.
+- It makes dataset creation more effective, helps find essential insights from training results, and improves AI performance.
 
 More detail
 ↓↓↓
@@ -52,11 +52,11 @@ pip install git+https://github.com/adansons/base
 
 ### 2.1 with CLI
 
-when you run any Base CLI command for the first time, Base will ask your access key provided on our slack.
+when you run any Base CLI command for the first time, Base will ask for your access key provided on our slack.
 
 then, Base will verify the specified access key was correct.
 
-if you don't have any access key, please see [0. Get Access Key](#0-get-access-key).
+if you don't have an access key, please see [0. Get Access Key](#0-get-access-key).
 
 this command will show you what projects you have
 
@@ -84,20 +84,20 @@ projects
 
 if you don’t want to configure interactively, you can use environment variables for configuration.
 
-`BASE_USER_ID` is used for identification of users, this is the email address you submitted via our form.
+`BASE_USER_ID` is used for the identification of users, this is the email address you submitted via our form.
 
 ```bash
 export BASE_ACCESS_KEY=xxxxxxxxxx
 export BASE_USER_ID=xxxx@yyyy.com
 ```
 
-## 3. Tutorial 1: Organize meta data and Create dataset
+## 3. Tutorial 1: Organize metadata and Create a dataset
 
-let’s start Base tutorial with mnist dataset.
+let’s start the Base tutorial with the mnist dataset.
 
 ### Step 0. prepare sample dataset
 
-install dependencied for download dataset at first.
+install dependencies for download dataset at first.
 
 ```bash
 pip install pypng
@@ -109,13 +109,13 @@ then, download a script for mnist from our Base repository
 curl -sSL https://raw.githubusercontent.com/adansons/base/main/download_mnist.py > download_mnist.py
 ```
 
-run download-mnist script. you can specify any folder for downloading as last argument(default “~/dataset/mnist”). if you run this command on Windows, please replace it to windows path like “C:\dataset\mnist”
+run the download-mnist script. you can specify any folder for downloading as the last argument(default “~/dataset/mnist”). if you run this command on Windows, please replace it with the windows path like “C:\dataset\mnist”
 
 ```bash
 python3 ./download_mnist.py ~/dataset/mnist
 ```
 
-> Note: Base can link the data files if you put anywhere in local computer. So if you already downloaded mnist dataset, you can use it
+> Note: Base can link the data files if you put them anywhere on the local computer. So if you already downloaded the mnist dataset, you can use it
 
 after downloading, you can see data files in ~/dataset/mnist.
 
@@ -135,7 +135,7 @@ after downloading, you can see data files in ~/dataset/mnist.
                 └── ...
 ```
 
-### Step 1. create new project
+### Step 1. create a new project
 
 create mnist project with [base new <project>](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#70af41e65b51453f9b6807dc29354002) command.
 
@@ -150,23 +150,23 @@ Your Project UID
 ----------------
 abcdefghij0123456789
 
-save Project UID in local file (~/.base/projects)
+save Project UID in the local file (~/.base/projects)
 ```
 </details>
 
-Base will issue a Project Unique ID and automatically save it in local file.
+Base will issue a Project Unique ID and automatically save it in a local file.
 
 ### Step 2. import data files
 
-after the step 0, you have many png image files on ”~/dataset/mnist” directory.
+after step 0, you have many png image files on the”~/dataset/mnist” directory.
 
-let’s upload meta data related their paths into mnist project with `base import` command.
+let’s upload metadata related to their paths into the mnist project with the `base import` command.
 
 ```bash
 base import mnist --directory ~/dataset/mnist --extension png --parse "{dataType}/{label}/{id}.png"
 ```
 
-> Note: if you changed download folder, please replace “~/dataset/mnist” in above command.
+> Note: if you changed the download folder, please replace “~/dataset/mnist” in the above command.
 
 <details><summary>Output</summary>
 
@@ -179,17 +179,17 @@ Success!
 
 ### Step 3. import external metadata files
 
-if you have external meta data files, you can integrate them into existing project database with `—-external-file` option.
+if you have external metadata files, you can integrate them into the existing project database with the `—-external-file` option.
 
-in this time, we use `wrongImagesInMNISTTestset.csv` published at Github by youkaichao.
+in this time, we use `wrongImagesInMNISTTestset.csv` published on Github by youkaichao.
 
 [https://github.com/youkaichao/mnist-wrong-test](https://github.com/youkaichao/mnist-wrong-test)
 
-this is the extra meta data which correct wrong label on mnist test dataset.
+this is the extra metadata that correct wrong label on the mnist test dataset.
 
-you can evaluate your model more strictly and correctly by using these extra meta data with Base.
+you can evaluate your model more strictly and correctly by using these extra metadata with Base.
 
-download external csv
+download external CSV
 
 ```bash
 curl -SL https://raw.githubusercontent.com/youkaichao/mnist-wrong-test/master/wrongImagesInMNISTTestset.csv > ~/Downloads/wrongImagesInMNISTTestset.csv
@@ -230,13 +230,38 @@ Success!
 
 ### Step 4. filter and export dataset with CLI
 
-now, we are ready to create dataset.
+now, we are ready to create a dataset.
 
-let’s pick up a part of data files, label is 0, 1, or 2 for training, from project mnist with `base search <project>` command.
+let’s pick up a part of data files, the label is 0, 1, or 2 for training, from project mnist with `base search <project>` command.
 
 you can use `--conditions <value-only-search>` option for magical search filter and `--query <key-value-pair-search>` option for advanced filter.
 
-be careful that you may get so large output on your console without `-s, --summary` option.
+Note that the `--query` option can only use the value for searching.
+
+
+
+Be careful that you may get so large output on your console without the `-s, --summary` option.
+
+The `--query` option's grammar is below.
+
+`--query {KeyName} {Operator} {Values}`
+
+- add 1 space between each section
+- **don't use space any other**
+
+You can use these operators below in the query option.
+
+[operators]
+```
+  == : equal
+  != : not equal
+  >= : greater than
+  <= : less than
+  >  : greater
+  <  : less
+  in : inner list of Values
+  not in : not inner list of Values
+```
 
 (check [search docs](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#698aab257e884e6a82cf470ec7f459dc) for more information).
 
@@ -244,7 +269,7 @@ be careful that you may get so large output on your console without `-s, --summa
 base search mnist --conditions "train" --query "label in ['1','2','3']"
 ```
 
-> Note: in query option, you have to specified each component as string in list without space like `“[’1’,’2’,’3’]”`, when you want to operate `in` or `not in` query.
+> Note: in the query option, you have to specify each component as a string in the list without space like `“[’1’,’2’,’3’]”`, when you want to operate `in` or `not in` query.
 > 
 
 <details><summary>Output</summary>
@@ -259,9 +284,16 @@ base search mnist --conditions "train" --query "label in ['1','2','3']"
 
 > Note: If you specify no conditions or query, Base will return whole data files.
 
+If you want to use the 'OR search' with the `--query` command, please use our Python SDK.
+
 ### Step 5. filter and export dataset with Python SDK
 
-in python script, you can filter and export dataset easily and simply with `Project class` and `Files class`. (see [SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-e4b62aee4eee47caa96b7f436d6658cd))
+in python script, you can filter and export datasets easily and simply with `Project class` and `Files class`. (see [SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-e4b62aee4eee47caa96b7f436d6658cd))
+
+(If you don't have the packages below, please install them by using `pip`)
+```bash
+pip install NumPy pillow torch torchvision
+```
 
 ```python
 from base import Project, Dataset
@@ -289,7 +321,15 @@ def preprocess_func(path):
     image = np.array(image)
     return image
 
+# 'Dataset class' loads the datasets on your memory. (not only metadata but also datafiles) 
 dataset = Dataset(files, target_key="label", transform=preprocess_func)
+
+# you can also use dataset objects like this.
+for data, label in dataset:
+    # data: an image-data. ndarray
+    # label: the label of an image data, like 0
+    pass
+
 x_train, x_test, y_train, y_test = dataset.train_test_split(split_rate=0.2)
 
 # or use with torch
@@ -298,16 +338,16 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 def preprocess_func(path):
-        image = transforms.ToTensor()(transforms.Resize((28, 28))(Image.open(path)))
-        return image
+    image = transforms.ToTensor()(transforms.Resize((28, 28))(Image.open(path)))
+    return image
 
 dataset = Dataset(files, target_key="label", transform=preprocess_func)
 loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
 ```
 
-finally, let’s try one of most characteristic use cases on Adansons Base.
+finally, let’s try one of the most characteristic use cases on Adansons Base.
 
-in the external file you imported in step.3, some mnist test data files are annotated as `“-1”` in correction column. this means that it is difficult to classify that files even for human.
+in the external file, you imported in step.3, some mnist test data files are annotated as `“-1”` in the correction column. this means that it is difficult to classify that files even for a human.
 
 so, you should exclude that files from your dataset to evaluate your AI models more properly.
 
