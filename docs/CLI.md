@@ -658,8 +658,8 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     >>> sample query condition: CategoryName == airplane
     
     [operators]
-    - == : equel
-    - != : not equel
+    - == : equal
+    - != : not equal
     - >= : greater than
     - <= : less than
     - > : greater
