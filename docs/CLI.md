@@ -661,9 +661,9 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     - == : equel
     - != : not equel
     - >= : greater than
-    - <= : lesser than
+    - <= : less than
     - > : greater
-    - < : lesser
+    - < : less
     - in : inner list of Values
     ```
     
