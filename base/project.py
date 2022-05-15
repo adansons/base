@@ -531,7 +531,9 @@ class Project:
                     else:
                         payload = {"Items": table, "UpdateRule": update_rule_for_add}
                     res = requests.put(
-                        url, json.dumps(payload, ensure_ascii=False), headers=HEADER
+                        url,
+                        json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+                        headers=HEADER,
                     )
                     if res.status_code != 200:
                         raise Exception("Failed to join the tables")
