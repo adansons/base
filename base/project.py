@@ -9,6 +9,7 @@ import math
 import base64
 import requests
 from typing import Optional, List, Union
+import time
 
 from base.files import Files
 from base.parser import Parser
@@ -210,9 +211,7 @@ class Project:
         -------
         files : Files class instance
         """
-        files = Files(
-            self.project_name, conditions=conditions, query=query, sort_key=sort_key
-        )
+        files = Files(self.project_name, conditions=conditions, query=query, sort_key=sort_key)
         return files
 
     def add_datafile(
@@ -251,15 +250,11 @@ class Project:
         # calculation hash value and update meta data dictionary
         hash_value = calc_file_hash(file_path)
         meta_data["FileHash"] = hash_value
-        hash_dict[hash_value] = (
-            os.path.abspath(file_path).replace(os.sep, "/").replace("/", os.sep)
-        )
+        hash_dict[hash_value] = os.path.abspath(file_path).replace(os.sep, "/").replace("/", os.sep)
         meta_data.update(attributes)
 
         # create local datafile linker
-        linked_hash_location = os.path.join(
-            LINKER_DIR, self.project_uid, "linked_hash.json"
-        )
+        linked_hash_location = os.path.join(LINKER_DIR, self.project_uid, "linked_hash.json")
         os.makedirs(os.path.dirname(linked_hash_location), exist_ok=True)
 
         if os.path.exists(linked_hash_location):
@@ -331,9 +326,7 @@ class Project:
         """
         if extension[0] == ".":
             extension = extension[1:]
-        files = glob.glob(
-            os.path.join(dir_path, "**", f"*.{extension}"), recursive=True
-        )
+        files = glob.glob(os.path.join(dir_path, "**", f"*.{extension}"), recursive=True)
         data_list = []
         hash_dict = {}
 
@@ -343,9 +336,7 @@ class Project:
             if detail_parsing_rule is not None:
                 parser.update_rule(detail_parsing_rule)
 
-            if not parser.is_path_parsable(
-                files[0].split(dir_path)[-1].replace(os.sep, "/")
-            ):
+            if not parser.is_path_parsable(files[0].split(dir_path)[-1].replace(os.sep, "/")):
                 raise ValueError(
                     "Failed to parse path with specified rule. tell me detail parsing rule."
                 )
@@ -356,9 +347,7 @@ class Project:
             # calculation hash value and update meta data dictionary
             hash_value = calc_file_hash(f)
             meta_data["FileHash"] = hash_value
-            hash_dict[hash_value] = (
-                os.path.abspath(f).replace(os.sep, "/").replace("/", os.sep)
-            )
+            hash_dict[hash_value] = os.path.abspath(f).replace(os.sep, "/").replace("/", os.sep)
             meta_data.update(attributes)
 
             if parser is not None:
@@ -367,9 +356,7 @@ class Project:
 
             data_list.append(meta_data)
         # create local datafile linker
-        linked_hash_location = os.path.join(
-            LINKER_DIR, self.project_uid, "linked_hash.json"
-        )
+        linked_hash_location = os.path.join(LINKER_DIR, self.project_uid, "linked_hash.json")
 
         os.makedirs(os.path.dirname(linked_hash_location), exist_ok=True)
 
@@ -388,13 +375,32 @@ class Project:
         split_count = math.ceil(len(data_list) / limit_record_size)
         split_data_num = math.ceil(len(data_list) / split_count)
 
+        lap_time = []
         for s in range(split_count):
+            mean_lap_time = 25 if not lap_time else sum(lap_time) // len(lap_time)
+            minute = (split_count - s) * mean_lap_time // 60
+            second = (split_count - s) * mean_lap_time % 60
+            len_time = len(f"{minute}m {second}s")
+            print(
+                f"\r{s*10000}/{len(data_list)} files uploaded, estimated time "
+                + " " * (len("**m **s") - len_time)
+                + f"{minute}m {second}s",
+                end="",
+            )
+            start = time.time()
             items = {"Items": data_list[s * split_data_num : (s + 1) * split_data_num]}
             url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
             res = requests.post(url, json.dumps(items), headers=HEADER)
+            lap_time.append(int(time.time() - start))
 
             if res.status_code != 200:
+                print()
                 raise Exception("Failed to upload meta data.")
+
+        print(
+            f"\r{len(data_list)}/{len(data_list)} files uploaded."
+            + " " * len(", estimated time **m **s")
+        )
 
         file_num = len(data_list)
         return file_num
@@ -608,9 +614,7 @@ class Project:
             hash_value = calc_file_hash(f)
             hash_dict[hash_value] = f.replace(os.sep, "/").replace("/", os.sep)
 
-        linked_hash_location = os.path.join(
-            LINKER_DIR, self.project_uid, "linked_hash.json"
-        )
+        linked_hash_location = os.path.join(LINKER_DIR, self.project_uid, "linked_hash.json")
         os.makedirs(os.path.dirname(linked_hash_location), exist_ok=True)
 
         if os.path.exists(linked_hash_location):
@@ -668,9 +672,7 @@ class Project:
             )
 
         member_info = {"TargetUserID": member, "NewUserRole": permission_level}
-        url = (
-            f"{BASE_API_ENDPOINT}/project/{self.project_uid}/member?user={self.user_id}"
-        )
+        url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}/member?user={self.user_id}"
         res = requests.post(url, json.dumps(member_info), headers=HEADER)
         if res.status_code != 200:
             raise Exception(f"Failed to invite {member}.")
@@ -741,9 +743,7 @@ class Project:
         Exception
             raises if something went wrong with request to server
         """
-        url = (
-            f"{BASE_API_ENDPOINT}/project/{self.project_uid}/member?user={self.user_id}"
-        )
+        url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}/member?user={self.user_id}"
         res = requests.get(url, headers=HEADER)
 
         if res.status_code == 200:
