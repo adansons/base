@@ -9,6 +9,7 @@ import math
 import base64
 import requests
 from typing import Optional, List, Union
+import time
 
 from base.files import Files
 from base.parser import Parser
@@ -388,13 +389,32 @@ class Project:
         split_count = math.ceil(len(data_list) / limit_record_size)
         split_data_num = math.ceil(len(data_list) / split_count)
 
+        lap_time = []
         for s in range(split_count):
+            mean_lap_time = 25 if not lap_time else sum(lap_time) // len(lap_time)
+            minute = (split_count - s) * mean_lap_time // 60
+            second = (split_count - s) * mean_lap_time % 60
+            len_time = len(f"{minute}m {second}s")
+            print(
+                f"\r{s*10000}/{len(data_list)} files uploaded, estimated time "
+                + " " * (len("**m **s") - len_time)
+                + f"{minute}m {second}s",
+                end="",
+            )
+            start = time.time()
             items = {"Items": data_list[s * split_data_num : (s + 1) * split_data_num]}
             url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
             res = requests.post(url, json.dumps(items), headers=HEADER)
+            lap_time.append(int(time.time() - start))
 
             if res.status_code != 200:
+                print()
                 raise Exception("Failed to upload meta data.")
+
+        print(
+            f"\r{len(data_list)}/{len(data_list)} files uploaded."
+            + " " * len(", estimated time **m **s")
+        )
 
         file_num = len(data_list)
         return file_num
