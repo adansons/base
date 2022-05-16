@@ -43,7 +43,9 @@ class Dataset:
         filepath used to test
     """
 
-    def __init__(self, files: Files, target_key: str, transform: Optional[Callable] = None) -> None:
+    def __init__(
+        self, files: Files, target_key: str, transform: Optional[Callable] = None
+    ) -> None:
         """
         Make the dict to convert labels to numbers.
 
