@@ -284,6 +284,20 @@ These are the available attributes:
     >>> "/home/xxxx/dataset/mnist/0/12909.png"
     ```
     
+- metadata (dict)
+    whole dict of attributes (metadata) which related with this file.
+    
+    For example:
+    
+    ```Python
+    files[0].metadata
+    >>> {
+            "dataType": "train",
+            "label": "0",
+            "id": "12909"
+        }
+    ```
+    
 - attrs (dict)
     - attributes (metadata) which related with this file.
     
