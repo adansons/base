@@ -39,6 +39,7 @@ class File(str):
     def __new__(cls, file_path: str, attrs: dict):
         self = super().__new__(cls, file_path)
         self.path = file_path
+        self.metadata = attrs
         self.__dict__.update(attrs)
         return self
 
