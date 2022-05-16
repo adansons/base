@@ -453,6 +453,76 @@ This method apply additional filter to already filtered Files object. You can us
 
 - Files class
 
+There are available operators
+
+ - [＋ (concatenation)](#+-(concatenatopm))
+ - [| (union)](#|-(union))
+
+ ### **+ (concatenation)**
+Return a new Files object that is the concatenataion of the 2 Files object. You can use this operator recursively.
+
+This operation is **not** sensitive to element duplication. If both Files objects has same File object, the operated Files object has 2 same File object.
+
+**Expression**
+```python
+concated_files = files1 + files2
+
+# You can operate recursively.
+concated_files = files1 + files2 + files3
+concated_files2 = concated_files + files4
+```
+
+**Examples**
+ ```python
+files1 = project.files(conditions="20220418", query=["hour >= 018"], sort_key="hour")
+files2 = project.files(conditions="20220419", query=["hour >= 021"], sort_key="hour")
+
+files = files1 + files2
+print(files)
+>>> ======Files======
+     Files1(project_name="project-name", conditions="20220418", query=["hour >= 018"], sort_key="hour", file_num=160)
+     Files2(project_name="project-name", conditions="20220419", query=["hour >= 021"], sort_key="hour", file_num=100)
+     ===Expressions===
+     Files1 + Files2
+
+print(len(files))
+>>> 260
+ ```
+
+
+ ### **| (union)**
+Return a new Files object that is the union of the 2 Files object. You can use this operator recursively.
+
+This operation guaranteed that all File objects that operated Files object has are unique.
+
+**Expression**
+```python
+union_files = files1 | files2
+
+# You can operate recursively.
+union_files = files1 | files2 | files3
+union_files2 = union_files | files4
+```
+
+**Examples**
+ ```python
+files1 = project.files(query=["hour >= 020"], sort_key="hour")
+files2 = project.files(conditions="20220426,20220429", query=["hour >= 17"], sort_key="hour")
+
+files = files1 + files2
+print(files)
+>>> ======Files======
+     Files1(project_name="project-name", conditions=None, query=["hour >= 020"], sort_key="hour", file_num=650)
+     Files2(project_name="project-name", conditions="20220426,20220429", query=["hour >= 017"], sort_key="hour", file_num=200)
+     ===Expressions===
+     Files1 or Files2
+
+print(len(files))
+>>> 710
+ ```
+
+
+
 → [Back to top](#python-reference)
 
 ## **calc_file_hash()**
