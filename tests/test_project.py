@@ -2,7 +2,6 @@
 
 # Copyright 2022 Adansons Inc.
 # Please contact engineer@adansons.co.jp
-from distutils import extension
 import os
 import time
 from click.testing import CliRunner
@@ -21,12 +20,38 @@ from base.project import (
     archive_project,
     delete_project,
     Project,
+    summarize_keys_information
 )
 
 PROJECT_NAME = "adansons_test_project"
 USER_ID = get_user_id_from_db(get_access_key())
 INVITE_USER_ID = "test_invite@adansons.co.jp"
 TESTS_DIR = os.path.dirname(__file__)
+TEST_METADATA_SUMMARY = [
+    {'LowerValue': '0', 'EditorList': ['xxxx@yyy.com'], 'Creator': 'xxxx@yyy.com', 'ValueHash': '6dd1c6ef359fc0290897273dfee97dd6d1f277334b9a53f07056500409fd0f3a', 'LastEditor': 'xxxx@yyy.com', 'UpperValue': '59999', 'ValueType': 'str', 'CreatedTime': '1651429889.986235', 'LastModifiedTime': '1651430744.0796146', 'KeyHash': 'a56145270ce6b3bebd1dd012b73948677dd618d496488bc608a3cb43ce3547dd', 'KeyName': 'id', 'RecordedCount': 70000},
+    {'LowerValue': '0', 'EditorList': ['xxxx@yyy.com'], 'Creator': 'xxxx@yyy.com', 'ValueHash': '6dd1c6ef359fc0290897273dfee97dd6d1f277334b9a53f07056500409fd0f3a', 'LastEditor': 'xxxx@yyy.com', 'UpperValue': '59999', 'ValueType': 'int', 'CreatedTime': '1651429889.986235', 'LastModifiedTime': '1651430744.0796146', 'KeyHash': 'a56145270ce6b3bebd1dd012b73948677dd618d496488bc608a3cb43ce3547dd', 'KeyName': 'index', 'RecordedCount': 70000},
+    {'LowerValue': '0or6', 'EditorList': ['xxxx@yyy.com'], 'Creator': 'xxxx@yyy.com', 'ValueHash': '665c5c8dca33d1e21cbddcf524c7d8e19ec4b6b1576bbb04032bdedd8e79d95a', 'LastEditor': 'xxxx@yyy.com', 'UpperValue': '-1', 'ValueType': 'str', 'CreatedTime': '1651430744.0796146', 'LastModifiedTime': '1651430744.0796146', 'KeyHash': '34627e3242f2ca21f540951cb5376600aebba58675654dd5f61e860c6948bffa', 'KeyName': 'correction', 'RecordedCount': 74},
+    {'LowerValue': '0', 'EditorList': ['xxxx@yyy.com'], 'Creator': 'xxxx@yyy.com', 'ValueHash': '0c2fb8f0d59d60a0a5e524c7794d1cf091a377e5c0d3b2cf19324432562555e1', 'LastEditor': 'xxxx@yyy.com', 'UpperValue': '9', 'ValueType': 'str', 'CreatedTime': '1651429889.986235', 'LastModifiedTime': '1651430744.0796146', 'KeyHash': '1aca80e8b55c802f7b43740da2990e1b5735bbb323d93eb5ebda8395b04025e2', 'KeyName': 'label', 'RecordedCount': 70000},
+    {'LowerValue': '0', 'EditorList': ['xxxx@yyy.com'], 'Creator': 'xxxx@yyy.com', 'ValueHash': '0c2fb8f0d59d60a0a5e524c7794d1cf091a377e5c0d3b2cf19324432562555e1', 'LastEditor': 'xxxx@yyy.com', 'UpperValue': '9', 'ValueType': 'int', 'CreatedTime': '1651429889.986235', 'LastModifiedTime': '1651430744.0796146', 'KeyHash': '1aca80e8b55c802f7b43740da2990e1b5735bbb323d93eb5ebda8395b04025e2', 'KeyName': 'originalLabel', 'RecordedCount': 70000},
+    {'LowerValue': 'test', 'EditorList': ['xxxx@yyy.com'], 'Creator': 'xxxx@yyy.com', 'ValueHash': '0e546bb01e2c9a9d1c388fca8ce3fabdde16084aee10c58becd4767d39f62ab7', 'LastEditor': 'xxxx@yyy.com', 'UpperValue': 'train', 'ValueType': 'str', 'CreatedTime': '1651429889.986235', 'LastModifiedTime': '1651430744.0796146', 'KeyHash': '9c98c4cbd490df10e7dc42f441c72ef835e3719d147241e32b962a6ff8c1f49d', 'KeyName': 'dataType', 'RecordedCount': 70000}
+]
+TEST_SUMMARY_OUTPUT = {
+    'MaxRecordedCount': 70000,
+    'UniqueKeyCount': 4,
+    'MaxCharCount': {
+        'KEY NAME': 23,
+        'VALUE RANGE': 12,
+        'VALUE TYPE': 34,
+        'RECORDED COUNT': 14
+    },
+    'Keys': [
+        ('KEY NAME', 'VALUE RANGE', 'VALUE TYPE', 'RECORDED COUNT'),
+        ("'id','index'", '0 ~ 59999', "str('id'), int('index')", '70000'),
+        ("'correction'", '0or6 ~ -1', "str('correction')", '74'),
+        ("'label','originalLabel'", '0 ~ 9', "str('label'), int('originalLabel')", '70000'),
+        ("'dataType'", 'test ~ train', "str('dataType')", '70000')
+    ]
+}
 
 
 def test_initialize():
@@ -115,6 +140,11 @@ def test_archive_project():
 def test_delete_project():
     delete_project(USER_ID, PROJECT_NAME)
     delete_project_config(USER_ID, PROJECT_NAME)
+
+
+def test_summarize_keys_information():
+    result = summarize_keys_information(TEST_METADATA_SUMMARY)
+    assert result == TEST_SUMMARY_OUTPUT
 
 
 if __name__ == "__main__":
