@@ -961,10 +961,10 @@ def summarize_keys_information(metadata_summary: List[dict]) -> dict:
 
     recorded_count_list = []
     char_count = {
-        "KEY NAME": [8],
-        "VALUE RANGE": [11],
-        "VALUE TYPE": [10],
-        "RECORDED COUNT": [14]
+        "KEY NAME": [8], # length of "KEY NAME"
+        "VALUE RANGE": [11], # length of "VALUE RANGE"
+        "VALUE TYPE": [10], # length of "VALUE TYPE"
+        "RECORDED COUNT": [14] # length of "RECORDED COUNT"
     }
     summary_list = [("KEY NAME", "VALUE RANGE", "VALUE TYPE", "RECORDED COUNT")]
     for key_summary in keyhash_to_summary.values():
@@ -990,7 +990,7 @@ def summarize_keys_information(metadata_summary: List[dict]) -> dict:
         recorded_count_list.append(key_summary["RecordedCount"])
 
     summary_for_print = {
-        "MaxRecordedCount": max(recorded_count_list),
+        "MaxRecordedCount": max(recorded_count_list) if recorded_count_list else 0,
         "UniqueKeyCount": len(summary_list) - 1,
         "MaxCharCount": {
             "KEY NAME": max(char_count["KEY NAME"]),
