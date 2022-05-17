@@ -59,7 +59,7 @@ def test_show_project_detail():
     runner = CliRunner()
     result = runner.invoke(show_project_detail, [PROJECT_NAME])
     assert result.exit_code == 0
-    assert "projects" in result.output
+    assert f"project {PROJECT_NAME}" in result.output
 
 
 def test_import_dataset_with_invalid_rule():

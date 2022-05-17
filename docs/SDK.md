@@ -26,6 +26,7 @@
     - [func create_project](#createproject)
     - [func delete_project](#deleteproject)
     - [func get_projects](#getprojects)
+    - [func summarize_keys_information]()
 
 ## **check_project_exists()**
 
@@ -1218,5 +1219,47 @@ Get list of projects.
 
 - Exception
     - raises if something went wrong on request to server
+
+→ [Back to top](#python-reference)
+
+## **summarize_keys_information()**
+
+```python
+function base.project.summarize_keys_information(metadata_summary="list")
+```
+
+Summarize information of keys on project for printing.
+
+**Parameters**
+
+- metadata_summary (list) - requeired
+    - output of the base.Project().get_metadata_summary() method
+
+**Returns**
+
+- summary_for_print (dict)
+    - summarized key information for printing
+
+```JavaScript
+{
+    "MaxRecordedCount": Integer,
+    "UniqueKeyCount": Integer,
+    "MaxCharCount": {
+        "KEY NAME": Integer,
+        "VALUE RANGE": Integer,
+        "VALUE TYPE": Integer,
+        "RECORDED COUNT": Integer
+    },
+    "Keys": [
+        (
+            KeyName: String,
+            ValueRange: String,
+            ValueType: String,
+            RecordedCount: String
+        ),
+        ...
+    ]
+}
+```
 
 → [Back to top](#python-reference)
