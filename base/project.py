@@ -955,30 +955,39 @@ def summarize_keys_information(metadata_summary: List[dict]) -> dict:
                 "KeyName": {key_record["KeyName"]},
                 "LowerValue": key_record["LowerValue"],
                 "UpperValue": key_record["UpperValue"],
-                "ValueType": {key_record["ValueType"]: {"'{}'".format(key_record["KeyName"])}},
-                "RecordedCount": key_record["RecordedCount"]
+                "ValueType": {
+                    key_record["ValueType"]: {"'{}'".format(key_record["KeyName"])}
+                },
+                "RecordedCount": key_record["RecordedCount"],
             }
 
     recorded_count_list = []
     char_count = {
-        "KEY NAME": [8], # length of "KEY NAME"
-        "VALUE RANGE": [11], # length of "VALUE RANGE"
-        "VALUE TYPE": [10], # length of "VALUE TYPE"
-        "RECORDED COUNT": [14] # length of "RECORDED COUNT"
+        "KEY NAME": [8],  # length of "KEY NAME"
+        "VALUE RANGE": [11],  # length of "VALUE RANGE"
+        "VALUE TYPE": [10],  # length of "VALUE TYPE"
+        "RECORDED COUNT": [14],  # length of "RECORDED COUNT"
     }
     summary_list = [("KEY NAME", "VALUE RANGE", "VALUE TYPE", "RECORDED COUNT")]
     for key_summary in keyhash_to_summary.values():
-        key_name_summary = ",".join(sorted([f"'{name}'" for name in key_summary["KeyName"]]))
-        value_range_summary = f'{key_summary["LowerValue"]} ~ {key_summary["UpperValue"]}'
+        key_name_summary = ",".join(
+            sorted([f"'{name}'" for name in key_summary["KeyName"]])
+        )
+        value_range_summary = (
+            f'{key_summary["LowerValue"]} ~ {key_summary["UpperValue"]}'
+        )
         value_type_summary = ", ".join(
-            [f"{vtype}({','.join(list(name_list))})" for vtype, name_list in key_summary["ValueType"].items()]
+            [
+                f"{vtype}({','.join(list(name_list))})"
+                for vtype, name_list in key_summary["ValueType"].items()
+            ]
         )
 
         summary = (
             key_name_summary,
             value_range_summary,
             value_type_summary,
-            str(key_summary["RecordedCount"])
+            str(key_summary["RecordedCount"]),
         )
         summary_list.append(summary)
 
@@ -996,9 +1005,9 @@ def summarize_keys_information(metadata_summary: List[dict]) -> dict:
             "KEY NAME": max(char_count["KEY NAME"]),
             "VALUE RANGE": max(char_count["VALUE RANGE"]),
             "VALUE TYPE": max(char_count["VALUE TYPE"]),
-            "RECORDED COUNT": max(char_count["RECORDED COUNT"])
+            "RECORDED COUNT": max(char_count["RECORDED COUNT"]),
         },
-        "Keys": summary_list
+        "Keys": summary_list,
     }
     return summary_for_print
 
