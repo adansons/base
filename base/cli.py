@@ -409,7 +409,7 @@ path to your file: {sample_file_path}"
     except ValueError as e:
         print(e)
         click.echo(
-            f"\nCan't parse uniquely with parsing rule: {parse}.\n\
+            f"\nCan't parse uniquely with parsing rule: {parse}\n\
 Please tell me detail parsing rule in accordance with the actual path.\n\
 * use {{value}} to parse phrases with value in the actual path\n\
 * put {{}} before/after the value corresponding to {{_}} on the original parsing rule.\n\

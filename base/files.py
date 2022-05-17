@@ -3,6 +3,7 @@
 # Copyright 2022 Adansons Inc.
 # Please contact engineer@adansons.co.jp
 import os
+import re
 import json
 import copy
 import requests
@@ -39,6 +40,7 @@ class File(str):
     def __new__(cls, file_path: str, attrs: dict):
         self = super().__new__(cls, file_path)
         self.path = file_path
+        self.metadata = attrs
         self.__dict__.update(attrs)
         return self
 
@@ -100,7 +102,14 @@ class Files:
         self.user_id = get_user_id()
         self.project_uid = get_project_uid(self.user_id, project_name)
 
+        self.sort_key = sort_key
+        self.conditions = conditions
+        self.query = query
+
         self.__export(conditions=conditions, query=query, sort_key=sort_key)
+
+        self.reprtext = self.__reprtext_generator()
+        self.expression = self.__class__.__name__
 
     def __search(
         self, conditions: Optional[str] = None, query: List[str] = []
@@ -170,10 +179,6 @@ class Files:
         """
         # arguments varidation
         self.__validate_args(conditions, query, sort_key)
-
-        self.sort_key = sort_key
-        self.conditions = conditions
-        self.query = query
 
         result = self.__search(conditions, query)
         if sort_key is not None:
@@ -364,14 +369,95 @@ class Files:
     def __repr_formatter(self, string: Optional[str]) -> Optional[str]:
         return "'" + string + "'" if string is not None else None
 
-    def __repr__(self) -> str:
+    def __reprtext_generator(self) -> str:
         project_name = self.__repr_formatter(self.project_name)
         conditions = self.__repr_formatter(self.conditions)
-        query = self.__repr_formatter(
-            None if len(self.query) == 0 else "&".join(self.query)
-        )
+        query = self.query
         sort_key = self.__repr_formatter(self.sort_key)
-        return f"{self.__class__.__name__}(project_name={project_name}, conditions={conditions}, query={query}, sort_key={sort_key}, file_num={len(self.files)})"
+        reprtext = f"{self.__class__.__name__}(project_name={project_name}, conditions={conditions}, query={query}, sort_key={sort_key}, file_num={len(self.files)})\n"
+        return reprtext
+
+    def __repr__(self) -> str:
+        # if this instance is operated,
+        if self.reprtext.count(self.__class__.__name__) >= 2:
+            repr_header = "======Files======\n"
+            expres_header = "===Expressions===\n"
+            # number each File instance
+            self.reprtext = re.sub(
+                f"{self.__class__.__name__}[0-9]*", "{}", self.reprtext
+            )
+            self.expression = re.sub(
+                f"{self.__class__.__name__}[0-9]*", "{}", self.expression
+            )
+            self.reprtext = self.reprtext.format(
+                *[
+                    f"{self.__class__.__name__}{i+1}"
+                    for i in range(self.reprtext.count("{}"))
+                ]
+            )
+            self.expression = self.expression.format(
+                *[
+                    f"{self.__class__.__name__}{i+1}"
+                    for i in range(self.expression.count("{}"))
+                ]
+            )
+            return repr_header + self.reprtext + expres_header + self.expression
+        else:
+            return self.reprtext
+
+    def __add__(self, other: "Files") -> "Files":
+        if isinstance(other, self.__class__):
+            files = copy.copy(self)
+            files.result = self.result + other.result
+            files.__set_attributes(files.result)
+            files.reprtext = files.reprtext + other.reprtext
+            files.expression += " + " + other.expression
+            files.conditions = self.conditions + "," + other.conditions
+            files.query = sorted(
+                set([*(self.query), *(other.query)]),
+                key=[*(self.query), *(other.query)].index,
+            )
+            return files
+        else:
+            raise TypeError(
+                f"unsupported operand type(s) for +: '{self.__class__.__name__}' and '{other.__class__.__name__}'."
+            )
+
+    def __or__(self, other: "Files") -> "Files":
+        if isinstance(other, self.__class__):
+            files = copy.copy(self)
+            uniq_result = list(
+                set(
+                    map(
+                        lambda x: json.dumps(sorted(x.items())),
+                        [*(self.result), *(other.result)],
+                    )
+                ),
+            )
+            files.result = [dict(json.loads(result)) for result in uniq_result]
+            files.__set_attributes(files.result)
+
+            files.reprtext = files.reprtext + other.reprtext
+            files_expression_count = files.expression.count(files.__class__.__name__)
+            other_expression_count = other.expression.count(other.__class__.__name__)
+            if files_expression_count >= 2 and other_expression_count >= 2:
+                files.expression = f"({files.expression}) or ({other.expression})"
+            elif files_expression_count == 1 and other_expression_count >= 2:
+                files.expression = f"{files.expression} or ({other.expression})"
+            elif files_expression_count >= 2 and other_expression_count == 1:
+                files.expression = f"({files.expression}) or {other.expression}"
+            elif files_expression_count == 1 and other_expression_count == 1:
+                files.expression = f"{files.expression} or {other.expression}"
+            files.conditions = self.conditions + "," + other.conditions
+            files.query = sorted(
+                set([*(self.query), *(other.query)]),
+                key=[*(self.query), *(other.query)].index,
+            )
+            return files
+        else:
+            raise TypeError(
+                f"unsupported operand type(s) for +: '{self.__class__.__name__}' and '{other.__class__.__name__}'."
+            )
 
 
 if __name__ == "__main__":

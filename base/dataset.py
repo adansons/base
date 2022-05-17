@@ -65,11 +65,6 @@ class Dataset:
         self.files = files
         self.paths = self.files.paths
 
-        target_values = [getattr(file, target_key) for file in self.files]
-        unique_target_values = list(set(target_values))
-        numbers = [*range(len(unique_target_values))]
-        self.convert_dict = dict(zip(unique_target_values, numbers))
-
     def train_test_split(self, split_rate: int = 0.25) -> Tuple[list]:
         """
         Split train data and test data.
@@ -91,8 +86,6 @@ class Dataset:
             target label used to test
         """
         self.y = [getattr(i, self.target_key) for i in self.files]
-        self.y = [self.convert_dict[i] for i in self.y]
-        self.y = np.eye(len(self.convert_dict))[self.y]
         self.x = [self.transform(i) for i in self.paths]
 
         (
@@ -114,7 +107,6 @@ class Dataset:
         path = self.paths[idx]
         data = self.transform(path)
         label = getattr(self.files[idx], self.target_key)
-        label = self.convert_dict[label]
 
         return data, label
 
