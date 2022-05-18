@@ -79,6 +79,7 @@ def base_config(func):
 
     return wrapper
 
+
 @click.version_option(VERSION)
 @click.group()
 def main():
