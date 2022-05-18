@@ -17,6 +17,7 @@ from base.project import (
     get_projects,
     archive_project,
     delete_project,
+    summarize_keys_information,
 )
 from base.config import (
     get_user_id,
@@ -241,12 +242,28 @@ def show_project_detail(project, user_id, member_list):
 
         try:
             key_list = pjt.get_metadata_summary()
+            summary_for_print = summarize_keys_information(key_list)
         except Exception as e:
             print(e)
         else:
-            click.echo(f"projects {project}\n===============")
-            for column in key_list:
-                click.echo(column)
+            click.echo(
+                f"project {project}\n===============\nYou have {summary_for_print['MaxRecordedCount']} records with {summary_for_print['UniqueKeyCount']} keys in this project.\n\n[Keys Information]\n"
+            )
+
+            # first element is ('KEY NAME', 'VALUE RANGE', 'VALUE TYPE', 'RECORDED COUNT')
+            max_len_list = [
+                summary_for_print["MaxCharCount"][column]
+                for column in summary_for_print["Keys"][0]
+            ]
+            for row in summary_for_print["Keys"]:
+                click.echo(
+                    "  ".join(
+                        [
+                            content + " " * (length - len(content))
+                            for content, length in zip(row, max_len_list)
+                        ]
+                    )
+                )
     else:
         try:
             member_list = pjt.get_members()
@@ -404,7 +421,7 @@ path to your file: {sample_file_path}"
     except ValueError as e:
         print(e)
         click.echo(
-            f"\nCan't parse uniquely with parsing rule: {parse}.\n\
+            f"\nCan't parse uniquely with parsing rule: {parse}\n\
 Please tell me detail parsing rule in accordance with the actual path.\n\
 * use {{value}} to parse phrases with value in the actual path\n\
 * put {{}} before/after the value corresponding to {{_}} on the original parsing rule.\n\

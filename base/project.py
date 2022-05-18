@@ -8,7 +8,8 @@ import glob
 import math
 import base64
 import requests
-from typing import Optional, List, Union
+from typing import Optional, List, Tuple, Union
+import time
 
 from base.files import Files
 from base.parser import Parser
@@ -388,13 +389,32 @@ class Project:
         split_count = math.ceil(len(data_list) / limit_record_size)
         split_data_num = math.ceil(len(data_list) / split_count)
 
+        lap_time = []
         for s in range(split_count):
+            mean_lap_time = 25 if not lap_time else sum(lap_time) // len(lap_time)
+            minute = (split_count - s) * mean_lap_time // 60
+            second = (split_count - s) * mean_lap_time % 60
+            len_time = len(f"{minute}m {second}s")
+            print(
+                f"\r{s*10000}/{len(data_list)} files uploaded, estimated time "
+                + " " * (len("**m **s") - len_time)
+                + f"{minute}m {second}s",
+                end="",
+            )
+            start = time.time()
             items = {"Items": data_list[s * split_data_num : (s + 1) * split_data_num]}
             url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
             res = requests.post(url, json.dumps(items), headers=HEADER)
+            lap_time.append(int(time.time() - start))
 
             if res.status_code != 200:
+                print()
                 raise Exception("Failed to upload meta data.")
+
+        print(
+            f"\r{len(data_list)}/{len(data_list)} files uploaded."
+            + " " * len(", estimated time **m **s")
+        )
 
         file_num = len(data_list)
         return file_num
@@ -863,6 +883,133 @@ class Project:
                     pre_cache.append({key_name})
                     cache = pre_cache
         return attrs
+
+
+def summarize_keys_information(metadata_summary: List[dict]) -> dict:
+    """
+    Summarize information of keys on project for printing.
+
+    Parameters
+    ----------
+    metadata_summary : list
+        output of base.Project().get_metadata_summary() method
+        it is raw output of MetaKeyTable on DynamoDB
+        so some records will have a same KeyHash (separated)
+        [
+            {
+                "KeyHash": String,
+                "KeyName": String,
+                "ValueHash": String,
+                "ValueType": String,
+                "RecordedCount": Integer,
+                "UpperValue": String,
+                "LowerValue": String,
+                "CreatedTime": String of unix time,
+                "LastModifiedTime": String of unix time,
+                "Creator": String,
+                "LastEditor": String,
+                "EditerList": List of String
+            },
+            ...
+        ]
+
+    Returns
+    -------
+    summary_for_print : dict
+        summarized key information for printing
+        {
+            "MaxRecordedCount": Integer,
+            "UniqueKeyCount": Integer,
+            "MaxCharCount": {
+                "KEY NAME": Integer,
+                "VALUE RANGE": Integer,
+                "VALUE TYPE": Integer,
+                "RECORDED COUNT": Integer
+            },
+            "Keys": [
+                (
+                    KeyName: String,
+                    ValueRange: String,
+                    ValueType: String,
+                    RecordedCount: String
+                )
+            ]
+        }
+    """
+    keyhash_to_summary = {}
+    for key_record in metadata_summary:
+        key_hash = key_record["KeyHash"]
+        if key_hash in keyhash_to_summary:
+            keyhash_to_summary[key_hash]["KeyName"].add(key_record["KeyName"])
+            value_type = key_record["ValueType"]
+            if value_type in keyhash_to_summary[key_hash]["ValueType"]:
+                keyhash_to_summary[key_hash]["ValueType"][value_type].add(
+                    "'{}'".format(key_record["KeyName"])
+                )
+            else:
+                keyhash_to_summary[key_hash]["ValueType"][value_type] = {
+                    "'{}'".format(key_record["KeyName"])
+                }
+        else:
+            keyhash_to_summary[key_hash] = {
+                "KeyName": {key_record["KeyName"]},
+                "LowerValue": key_record["LowerValue"],
+                "UpperValue": key_record["UpperValue"],
+                "ValueType": {
+                    key_record["ValueType"]: {"'{}'".format(key_record["KeyName"])}
+                },
+                "RecordedCount": key_record["RecordedCount"],
+            }
+
+    recorded_count_list = []
+    char_count = {
+        "KEY NAME": [8],  # length of "KEY NAME"
+        "VALUE RANGE": [11],  # length of "VALUE RANGE"
+        "VALUE TYPE": [10],  # length of "VALUE TYPE"
+        "RECORDED COUNT": [14],  # length of "RECORDED COUNT"
+    }
+    summary_list = [("KEY NAME", "VALUE RANGE", "VALUE TYPE", "RECORDED COUNT")]
+    for key_summary in keyhash_to_summary.values():
+        key_name_summary = ",".join(
+            sorted([f"'{name}'" for name in key_summary["KeyName"]])
+        )
+        value_range_summary = (
+            f'{key_summary["LowerValue"]} ~ {key_summary["UpperValue"]}'
+        )
+        value_type_summary = ", ".join(
+            [
+                f"{vtype}({','.join(list(name_list))})"
+                for vtype, name_list in key_summary["ValueType"].items()
+            ]
+        )
+
+        summary = (
+            key_name_summary,
+            value_range_summary,
+            value_type_summary,
+            str(key_summary["RecordedCount"]),
+        )
+        summary_list.append(summary)
+
+        char_count["KEY NAME"].append(len(key_name_summary))
+        char_count["VALUE RANGE"].append(len(value_range_summary))
+        char_count["VALUE TYPE"].append(len(value_type_summary))
+        char_count["RECORDED COUNT"].append(len(str(key_summary["RecordedCount"])))
+
+        recorded_count_list.append(key_summary["RecordedCount"])
+
+    summary_for_print = {
+        "MaxRecordedCount": max(recorded_count_list) if recorded_count_list else 0,
+        "UniqueKeyCount": len(summary_list) - 1,
+        "MaxCharCount": {
+            "KEY NAME": max(char_count["KEY NAME"]),
+            "VALUE RANGE": max(char_count["VALUE RANGE"]),
+            "VALUE TYPE": max(char_count["VALUE TYPE"]),
+            "RECORDED COUNT": max(char_count["RECORDED COUNT"]),
+        },
+        "Keys": summary_list,
+    }
+    return summary_for_print
 
 
 if __name__ == "__main__":

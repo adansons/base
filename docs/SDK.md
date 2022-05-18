@@ -26,6 +26,7 @@
     - [func create_project](#createproject)
     - [func delete_project](#deleteproject)
     - [func get_projects](#getprojects)
+    - [func summarize_keys_information]()
 
 ## **check_project_exists()**
 
@@ -226,8 +227,6 @@ These are the available attributes:
     - object variable for modeling
 - files (Files)
     - inherited dataset interface
-- convert_dict (dict)
-    - categorical converter for object variable
 
 These are the available methods:
 
@@ -257,6 +256,69 @@ This method splits dataset for 2 folds. You can adjust split ratio with `split_r
 - y_test (list)
     - test label specified as target_key in Dataset class initialization
 
+**Usage**  
+Using the index operator [] on the Dataset class object, you can get the data transformed by user-defined preprocessing functions and label specified by target key. 
+
+```python
+def preprocess_func(path):
+    image = Image.open(path)
+    image = image.resize((28, 28))
+    image = np.array(image)
+    return image
+
+test_files = Project("mnist").files(conditions="test")
+test_dataset = Dataset(test_files, target_key="label", transform=preprocess_func)
+
+print(test_dataset[0])
+>>>(array([[  0,   0, ...]]), '7'
+```
+
+If transform is not specified, local path is returned by default.
+```python
+test_files = Project("mnist").files(conditions="test")
+test_dataset = Dataset(test_files, target_key="label")
+
+print(test_dataset[0])
+>>> '/Users/user/dataset/mnist/test/7/4815.png', '7'
+```
+
+For example:  
+
+You can get X and y using for loops as in the following example. 
+```python
+def preprocess_func(path):
+    image = Image.open(path)
+    image = image.resize((28, 28))
+    image = np.array(image)
+    return image
+
+def get_image_and_label(dataset, idx):
+    X, label = dataset[idx] # label = "0" or "1" or "2" , ...
+    y = int(label)
+    # cerate one-hot vector
+    y = np.eye(10)[y]
+    return X, y
+
+test_files = Project("mnist").files(conditions="test")
+test_dataset = Dataset(test_files, target_key="label", transform=preprocess_func)
+
+X_test = np.empty((len(test_dataset), 28, 28, 1))
+y_test = np.empty((len(test_dataset), 10))
+for i in range(len(test_dataset)):
+    X_test[i], y_test[i] = get_image_and_label(test_dataset, i)
+```
+
+If you use `train_test_split()`, y_train and y_test are list of string obtained by target_key by default.
+```python
+files = Project("mnist").files()
+dataset = Dataset(files, target_key="label", transform=preprocess_func)
+X_train, y_train, X_test, y_test = dataset.train_test_split(0.25)
+
+print(y_train)
+>>> ["1", "3", "4",...]
+```
+
+
 → [Back to top](#python-reference)
 
 ## **File class**
@@ -284,7 +346,21 @@ These are the available attributes:
     >>> "/home/xxxx/dataset/mnist/0/12909.png"
     ```
     
-- attrs (dict)
+- metadata (dict)
+    whole dict of attributes (metadata) which related with this file.
+    
+    For example:
+    
+    ```Python
+    files[0].metadata
+    >>> {
+            "dataType": "train",
+            "label": "0",
+            "id": "12909"
+        }
+    ```
+    
+- attrs (string)
     - attributes (metadata) which related with this file.
     
     For example:
@@ -452,6 +528,76 @@ This method apply additional filter to already filtered Files object. You can us
 **Returns**
 
 - Files class
+
+There are available operators
+
+ - [＋ (concatenation)](#+-(concatenatopm))
+ - [| (union)](#|-(union))
+
+ ### **+ (concatenation)**
+Return a new Files object that is the concatenation of the 2 Files object. You can use this operator recursively.
+
+This operation is **not** sensitive to element duplication. If both Files objects has same File object, the operated Files object has 2 same File object.
+
+**Expression**
+```python
+concated_files = files1 + files2
+
+# You can operate recursively.
+concated_files = files1 + files2 + files3
+concated_files2 = concated_files + files4
+```
+
+**Examples**
+ ```python
+files1 = project.files(conditions="0,1,2", query=['dataType == test'], sort_key="id")
+files2 = project.files(conditions="0,1,2", query=['dataType == train'], sort_key="id")
+
+files = files1 + files2
+print(files)
+>>> ======Files======
+     Files1(project_name='mnist', conditions='0,1,2', query=['dataType == test'], sort_key='id', file_num=3148)
+     Files2(project_name='mnist', conditions='0,1,2', query=['dataType == train'], sort_key='id', file_num=18624)
+     ===Expressions===
+     Files1 + Files2
+
+print(len(files))
+>>> 21772
+ ```
+
+
+ ### **| (union)**
+Return a new Files object that is the union of the 2 Files object. You can use this operator recursively.
+
+This operation guaranteed that all File objects that operated Files object has are unique.
+
+**Expression**
+```python
+union_files = files1 | files2
+
+# You can operate recursively.
+union_files = files1 | files2 | files3
+union_files2 = union_files | files4
+```
+
+**Examples**
+ ```python
+files1 = project.files(conditions="0,1,2", sort_key="id")
+files2 = project.files(conditions="0", sort_key="id")
+
+files = files1 | files2
+print(files)
+>>> ======Files======
+     Files1(project_name='mnist', conditions='0,1,2', query=[], sort_key='id', file_num=21772)
+     Files2(project_name='mnist', conditions='0', query=[], sort_key='id', file_num=6905)
+     ===Expressions===
+     Files1 or Files2
+
+print(len(files))
+>>> 21772
+ ```
+
+
 
 → [Back to top](#python-reference)
 
@@ -1073,5 +1219,47 @@ Get list of projects.
 
 - Exception
     - raises if something went wrong on request to server
+
+→ [Back to top](#python-reference)
+
+## **summarize_keys_information()**
+
+```python
+function base.project.summarize_keys_information(metadata_summary="list")
+```
+
+Summarize information of keys on project for printing.
+
+**Parameters**
+
+- metadata_summary (list) - requeired
+    - output of the base.Project().get_metadata_summary() method
+
+**Returns**
+
+- summary_for_print (dict)
+    - summarized key information for printing
+
+```JavaScript
+{
+    "MaxRecordedCount": Integer,
+    "UniqueKeyCount": Integer,
+    "MaxCharCount": {
+        "KEY NAME": Integer,
+        "VALUE RANGE": Integer,
+        "VALUE TYPE": Integer,
+        "RECORDED COUNT": Integer
+    },
+    "Keys": [
+        (
+            KeyName: String,
+            ValueRange: String,
+            ValueType: String,
+            RecordedCount: String
+        ),
+        ...
+    ]
+}
+```
 
 → [Back to top](#python-reference)

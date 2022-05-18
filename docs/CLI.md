@@ -658,12 +658,12 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     >>> sample query condition: CategoryName == airplane
     
     [operators]
-    - == : equel
-    - != : not equel
+    - == : equal
+    - != : not equal
     - >= : greater than
-    - <= : lesser than
+    - <= : less than
     - > : greater
-    - < : lesser
+    - < : less
     - in : inner list of Values
     ```
     
@@ -803,9 +803,17 @@ $ base show mnist
 <details><summary>Output</summary>
 
 ```
-projects mnist
+project mnist
 ===============
-{'KeyHash': '596d40a4ed24c02a31b19d6e633f46f64304a672b40f793d8c6deab868beb0e2', 'KeyName': 'condition', 'RecordedCount': 1699, ...}
+You have 70000 records with 4 keys in this project.
+
+[Keys Information]
+
+KEY NAME                 VALUE RANGE   VALUE TYPE                          RECORDED COUNT
+'id','index'             0 ~ 59999     str('id'), int('index')             70000         
+'correction'             0or6 ~ -1     str('correction')                   74            
+'label','originalLabel'  0 ~ 9         str('label'), int('originalLabel')  70000         
+'dataType'               test ~ train  str('dataType')                     70000
 ...
 ```
 </details>

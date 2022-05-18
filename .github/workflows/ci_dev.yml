@@ -1,10 +1,10 @@
-name: CI_PRD
+name: CI_DEV
 
 on:
   # execute when pull requested
   pull_request:
     branches: 
-      - 'main'
+      - 'dev'
 
     paths:
       - '.github/workflows/**'
