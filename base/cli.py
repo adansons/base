@@ -11,6 +11,7 @@ import json
 import click
 from datetime import datetime
 
+from base import VERSION
 from base.project import (
     Project,
     create_project,
@@ -79,6 +80,7 @@ def base_config(func):
     return wrapper
 
 
+@click.version_option(VERSION)
 @click.group()
 def main():
     """Adansons Database Command Line Interface"""
