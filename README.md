@@ -321,7 +321,6 @@ def preprocess_func(path):
     image = np.array(image)
     return image
 
-# 'Dataset class' loads the datasets on your memory. (not only metadata but also datafiles) 
 dataset = Dataset(files, target_key="label", transform=preprocess_func)
 
 # you can also use dataset objects like this.
