@@ -103,12 +103,10 @@ class Files:
         self.project_uid = get_project_uid(self.user_id, project_name)
 
         self.sort_key = sort_key
-        self.conditions = conditions
-        self.query = query
 
         self.__export(conditions=conditions, query=query, sort_key=sort_key)
 
-        self.reprtext = self.__reprtext_generator()
+        self.reprtext = self.__reprtext_generator(conditions, query)
         self.expression = self.__class__.__name__
 
     def __search(
@@ -182,7 +180,7 @@ class Files:
 
         result = self.__search(conditions, query)
         if sort_key is not None:
-            result = sorted(result, key=lambda x: x[sort_key])
+            result = sorted(result, key=lambda x: x.get(sort_key, float("inf")))
 
         self.result = result
         self.__set_attributes(result)
@@ -218,18 +216,14 @@ class Files:
         filtered_files.sort_key = (
             sort_key or self.sort_key
         )  # value1 or value2 <==> value2 if value1 is None else value1
-        filtered_files.conditions = conditions or self.conditions
-        filtered_files.query = query + self.query
 
         result = filtered_files.result
         if conditions is not None:
-            result = filtered_files.__conditions_filter(
-                result, filtered_files.conditions
-            )
+            result = filtered_files.__conditions_filter(result, conditions)
         if len(query) > 0:
-            result = filtered_files.__query_filter(result, filtered_files.query)
+            result = filtered_files.__query_filter(result, query)
         if sort_key is not None:
-            result = sorted(result, key=lambda x: x[sort_key])
+            result = sorted(result, key=lambda x: x.get(sort_key, float("inf")))
 
         filtered_files.result = result
         filtered_files.__set_attributes(result)
@@ -369,10 +363,10 @@ class Files:
     def __repr_formatter(self, string: Optional[str]) -> Optional[str]:
         return "'" + string + "'" if string is not None else None
 
-    def __reprtext_generator(self) -> str:
+    def __reprtext_generator(self, conditions, query) -> str:
         project_name = self.__repr_formatter(self.project_name)
-        conditions = self.__repr_formatter(self.conditions)
-        query = self.query
+        conditions = self.__repr_formatter(conditions)
+        query = query
         sort_key = self.__repr_formatter(self.sort_key)
         reprtext = f"{self.__class__.__name__}(project_name={project_name}, conditions={conditions}, query={query}, sort_key={sort_key}, file_num={len(self.files)})\n"
         return reprtext
@@ -383,12 +377,12 @@ class Files:
             repr_header = "======Files======\n"
             expres_header = "===Expressions===\n"
             # number each File instance
-            self.reprtext = re.sub(
-                f"{self.__class__.__name__}[0-9]*", "{}", self.reprtext
-            )
+            # 'Files(project_name=,...)' -> '{}(projwct_name=,...)' to use str.format()
+            self.reprtext = re.sub(f"{self.__class__.__name__}", "{}", self.reprtext)
             self.expression = re.sub(
-                f"{self.__class__.__name__}[0-9]*", "{}", self.expression
+                f"{self.__class__.__name__}", "{}", self.expression
             )
+            # '{}(projwct_name=,...)' -> 'Files1(projwct_name=,...)'
             self.reprtext = self.reprtext.format(
                 *[
                     f"{self.__class__.__name__}{i+1}"
@@ -412,11 +406,6 @@ class Files:
             files.__set_attributes(files.result)
             files.reprtext = files.reprtext + other.reprtext
             files.expression += " + " + other.expression
-            files.conditions = self.conditions + "," + other.conditions
-            files.query = sorted(
-                set([*(self.query), *(other.query)]),
-                key=[*(self.query), *(other.query)].index,
-            )
             return files
         else:
             raise TypeError(
@@ -425,15 +414,15 @@ class Files:
 
     def __or__(self, other: "Files") -> "Files":
         if isinstance(other, self.__class__):
-            files = copy.copy(self)
-            uniq_result = list(
-                set(
-                    map(
-                        lambda x: json.dumps(sorted(x.items())),
-                        [*(self.result), *(other.result)],
-                    )
-                ),
+            files_list = list(
+                map(
+                    lambda x: json.dumps(sorted(x.items())),
+                    [*(self.result), *(other.result)],
+                )
             )
+            uniq_result = sorted(set(files_list), key=files_list.index)
+
+            files = copy.copy(self)
             files.result = [dict(json.loads(result)) for result in uniq_result]
             files.__set_attributes(files.result)
 
@@ -448,11 +437,6 @@ class Files:
                 files.expression = f"({files.expression}) or {other.expression}"
             elif files_expression_count == 1 and other_expression_count == 1:
                 files.expression = f"{files.expression} or {other.expression}"
-            files.conditions = self.conditions + "," + other.conditions
-            files.query = sorted(
-                set([*(self.query), *(other.query)]),
-                key=[*(self.query), *(other.query)].index,
-            )
             return files
         else:
             raise TypeError(
