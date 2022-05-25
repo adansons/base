@@ -8,7 +8,7 @@ import json
 import copy
 import requests
 import urllib.parse
-from typing import Optional, List, Any
+from typing import Optional, Union, List, Any
 
 from base.config import (
     get_user_id,
@@ -81,7 +81,7 @@ class Files:
         project_name: str,
         conditions: Optional[str] = None,
         query: List[str] = [],
-        sort_key: Optional[str] = None,
+        sort_key: Union[str, List[str], None] = None,
     ) -> None:
         """
         Parameters
@@ -109,9 +109,7 @@ class Files:
         self.reprtext = self.__reprtext_generator(conditions, query)
         self.expression = self.__class__.__name__
 
-    def __search(
-        self, conditions: Optional[str] = None, query: List[str] = []
-    ) -> List[dict]:
+    def __search(self, conditions: Optional[str] = None, query: List[str] = []) -> List[dict]:
         """
         Get metadata of filtered files from DynamoDB.
 
@@ -144,9 +142,7 @@ class Files:
 
         result = self.__query_filter(result, query)
 
-        linked_hash_location = os.path.join(
-            LINKER_DIR, self.project_uid, "linked_hash.json"
-        )
+        linked_hash_location = os.path.join(LINKER_DIR, self.project_uid, "linked_hash.json")
         with open(linked_hash_location, "r", encoding="utf-8") as f:
             hash_dict = json.loads(f.read())
             result = [{"FilePath": hash_dict[i.pop("FileHash")], **i} for i in result]
@@ -157,7 +153,7 @@ class Files:
         self,
         conditions: Optional[str] = None,
         query: List[str] = [],
-        sort_key: Optional[str] = None,
+        sort_key: Union[str, List[str], None] = None,
     ):
         """
         Get metadata and return the File class.
@@ -180,7 +176,9 @@ class Files:
 
         result = self.__search(conditions, query)
         if sort_key is not None:
-            result = sorted(result, key=lambda x: x.get(sort_key, float("inf")))
+            if isinstance(sort_key, str):
+                sort_key = [sort_key]
+            result = sorted(result, key=lambda x: [x.get(key, float("inf")) for key in sort_key])
 
         self.result = result
         self.__set_attributes(result)
@@ -191,7 +189,7 @@ class Files:
         self,
         conditions: Optional[str] = None,
         query: List[str] = [],
-        sort_key: Optional[str] = None,
+        sort_key: Union[str, List[str], None] = None,
     ):
         """
         Filter metadata and return the File class.
@@ -223,7 +221,9 @@ class Files:
         if len(query) > 0:
             result = filtered_files.__query_filter(result, query)
         if sort_key is not None:
-            result = sorted(result, key=lambda x: x.get(sort_key, float("inf")))
+            if isinstance(sort_key, str):
+                sort_key = [sort_key]
+            result = sorted(result, key=lambda x: [x.get(key, float("inf")) for key in sort_key])
 
         filtered_files.result = result
         filtered_files.__set_attributes(result)
@@ -260,9 +260,7 @@ class Files:
                             queried_result.append(data)
                 elif operator == "!=":
                     for data in result:
-                        if key in data and not eval(
-                            f"'{data[key]}' {operator} '{value}'"
-                        ):
+                        if key in data and not eval(f"'{data[key]}' {operator} '{value}'"):
                             continue
                         else:
                             queried_result.append(data)
@@ -345,9 +343,7 @@ class Files:
                     f'Argument "conditions" must be str, not {conditions.__class__.__name__}.'
                 )
         if not hasattr(query, "__iter__"):
-            raise TypeError(
-                f'Argument "query" must be list, not {query.__class__.__name__}.'
-            )
+            raise TypeError(f'Argument "query" must be list, not {query.__class__.__name__}.')
         if sort_key is not None:
             if not isinstance(sort_key, str):
                 raise TypeError(
@@ -379,21 +375,13 @@ class Files:
             # number each File instance
             # 'Files(project_name=,...)' -> '{}(projwct_name=,...)' to use str.format()
             self.reprtext = re.sub(f"{self.__class__.__name__}", "{}", self.reprtext)
-            self.expression = re.sub(
-                f"{self.__class__.__name__}", "{}", self.expression
-            )
+            self.expression = re.sub(f"{self.__class__.__name__}", "{}", self.expression)
             # '{}(projwct_name=,...)' -> 'Files1(projwct_name=,...)'
             self.reprtext = self.reprtext.format(
-                *[
-                    f"{self.__class__.__name__}{i+1}"
-                    for i in range(self.reprtext.count("{}"))
-                ]
+                *[f"{self.__class__.__name__}{i+1}" for i in range(self.reprtext.count("{}"))]
             )
             self.expression = self.expression.format(
-                *[
-                    f"{self.__class__.__name__}{i+1}"
-                    for i in range(self.expression.count("{}"))
-                ]
+                *[f"{self.__class__.__name__}{i+1}" for i in range(self.expression.count("{}"))]
             )
             return repr_header + self.reprtext + expres_header + self.expression
         else:
