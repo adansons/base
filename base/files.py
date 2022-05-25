@@ -131,9 +131,7 @@ class Files:
         """
         url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}/files"
         if conditions is not None:
-            url += "/" + "/".join(
-                map(urllib.parse.quote_plus, conditions.split(","))
-            )
+            url += "/" + "/".join(map(urllib.parse.quote_plus, conditions.split(",")))
         url += "?user=" + self.user_id
 
         res = requests.get(url=url, headers=HEADER)
@@ -151,9 +149,7 @@ class Files:
         )
         with open(linked_hash_location, "r", encoding="utf-8") as f:
             hash_dict = json.loads(f.read())
-            result = [
-                {"FilePath": hash_dict[i.pop("FileHash")], **i} for i in result
-            ]
+            result = [{"FilePath": hash_dict[i.pop("FileHash")], **i} for i in result]
 
         return result
 
@@ -244,9 +240,7 @@ class Files:
 
         return filtered_files
 
-    def __query_filter(
-        self, result: List[dict], query: List[str] = []
-    ) -> List[dict]:
+    def __query_filter(self, result: List[dict], query: List[str] = []) -> List[dict]:
         """
         Filter metadata with query.
 
@@ -272,9 +266,7 @@ class Files:
 
                 if operator in ["==", ">", ">=", "<", "<="]:
                     for data in result:
-                        if key in data and eval(
-                            f"'{data[key]}' {operator} '{value}'"
-                        ):
+                        if key in data and eval(f"'{data[key]}' {operator} '{value}'"):
                             queried_result.append(data)
                 elif operator == "!=":
                     for data in result:
@@ -286,15 +278,11 @@ class Files:
                             queried_result.append(data)
                 elif operator in ["is", "is not"]:
                     for data in result:
-                        if key in data and eval(
-                            f"{data[key]} {operator} {value}"
-                        ):
+                        if key in data and eval(f"{data[key]} {operator} {value}"):
                             queried_result.append(data)
                 elif operator in ["in", "not in"]:
                     for data in result:
-                        if key in data and eval(
-                            f"'{data[key]}' {operator} {value}"
-                        ):
+                        if key in data and eval(f"'{data[key]}' {operator} {value}"):
                             queried_result.append(data)
                 else:
                     raise ValueError(
@@ -325,9 +313,7 @@ class Files:
             metadata filterd with conditions
         """
         conditions = set(conditions.split(","))
-        result = [
-            recode for recode in result if set(recode.values()) & conditions
-        ]
+        result = [recode for recode in result if set(recode.values()) & conditions]
         return result
 
     def __set_attributes(self, result: List[dict]) -> None:
@@ -402,9 +388,7 @@ class Files:
             expres_header = "===Expressions===\n"
             # number each File instance
             # 'Files(project_name=,...)' -> '{}(projwct_name=,...)' to use str.format()
-            self.reprtext = re.sub(
-                f"{self.__class__.__name__}", "{}", self.reprtext
-            )
+            self.reprtext = re.sub(f"{self.__class__.__name__}", "{}", self.reprtext)
             self.expression = re.sub(
                 f"{self.__class__.__name__}", "{}", self.expression
             )
@@ -453,16 +437,10 @@ class Files:
             files.__set_attributes(files.result)
 
             files.reprtext = files.reprtext + other.reprtext
-            files_expression_count = files.expression.count(
-                files.__class__.__name__
-            )
-            other_expression_count = other.expression.count(
-                other.__class__.__name__
-            )
+            files_expression_count = files.expression.count(files.__class__.__name__)
+            other_expression_count = other.expression.count(other.__class__.__name__)
             if files_expression_count >= 2 and other_expression_count >= 2:
-                files.expression = (
-                    f"({files.expression}) or ({other.expression})"
-                )
+                files.expression = f"({files.expression}) or ({other.expression})"
             elif files_expression_count == 1 and other_expression_count >= 2:
                 files.expression = f"{files.expression} or ({other.expression})"
             elif files_expression_count >= 2 and other_expression_count == 1:
