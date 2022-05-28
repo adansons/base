@@ -8,7 +8,7 @@ import json
 import copy
 import requests
 import urllib.parse
-from typing import Optional, List, Any
+from typing import Optional, Union, List, Any
 
 from base.config import (
     get_user_id,
@@ -81,7 +81,7 @@ class Files:
         project_name: str,
         conditions: Optional[str] = None,
         query: List[str] = [],
-        sort_key: Optional[str] = None,
+        sort_key: Union[str, List[str], None] = None,
     ) -> None:
         """
         Parameters
@@ -157,7 +157,7 @@ class Files:
         self,
         conditions: Optional[str] = None,
         query: List[str] = [],
-        sort_key: Optional[str] = None,
+        sort_key: Union[str, List[str], None] = None,
     ):
         """
         Get metadata and return the File class.
@@ -180,7 +180,12 @@ class Files:
 
         result = self.__search(conditions, query)
         if sort_key is not None:
-            result = sorted(result, key=lambda x: x.get(sort_key, float("inf")))
+            if isinstance(sort_key, str):
+                sort_key = [sort_key]
+            result = sorted(
+                result,
+                key=lambda x: [x.get(key, float("inf")) for key in sort_key],
+            )
 
         self.result = result
         self.__set_attributes(result)
@@ -191,7 +196,7 @@ class Files:
         self,
         conditions: Optional[str] = None,
         query: List[str] = [],
-        sort_key: Optional[str] = None,
+        sort_key: Union[str, List[str], None] = None,
     ):
         """
         Filter metadata and return the File class.
@@ -223,7 +228,12 @@ class Files:
         if len(query) > 0:
             result = filtered_files.__query_filter(result, query)
         if sort_key is not None:
-            result = sorted(result, key=lambda x: x.get(sort_key, float("inf")))
+            if isinstance(sort_key, str):
+                sort_key = [sort_key]
+            result = sorted(
+                result,
+                key=lambda x: [x.get(key, float("inf")) for key in sort_key],
+            )
 
         filtered_files.result = result
         filtered_files.__set_attributes(result)
@@ -349,7 +359,7 @@ class Files:
                 f'Argument "query" must be list, not {query.__class__.__name__}.'
             )
         if sort_key is not None:
-            if not isinstance(sort_key, str):
+            if not isinstance(sort_key, (str, list)):
                 raise TypeError(
                     f'Argument "sort_key" must be str, not {sort_key.__class__.__name__}.'
                 )
