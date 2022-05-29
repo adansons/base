@@ -541,7 +541,7 @@ def search_files(
                 output_path = os.path.join(".", "dataset.json")
                 if output is not None:
                     output_path = output
-                    os.makedirs(os.path.dirname(output), exist_ok=True)
+                    os.makedirs(os.path.dirname(output) or ".", exist_ok=True)
 
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(output_json)
@@ -555,7 +555,7 @@ def search_files(
                 output_path = os.path.join(".", "dataset.csv")
                 if output is not None:
                     output_path = output
-                    os.makedirs(os.path.dirname(output), exist_ok=True)
+                    os.makedirs(os.path.dirname(output) or ".", exist_ok=True)
 
                 with open(output_path, "w") as f:
                     f.write(output_csv)
