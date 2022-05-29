@@ -256,19 +256,29 @@ class Files:
         result : list of dict
             metadata filterd with query
         """
+
+        def number_to_int(obj: str):
+            return int(obj) if obj.isdigit() else obj
+
+        def natural_keys(obj):
+            return [number_to_int(c) for c in re.split(r"(\d+)", str(obj))]
+
         for q in query:
             queried_result = []
             try:
+                # if q = "label <= 7" or  q = "label <= '7'"
+                # key = "label", value = "7", operator = "<="
                 query_split = q.split()
                 key = query_split[0]
-                value = query_split[-1]
+                value = query_split[-1].lstrip("'").rstrip("'").lstrip('"').rstrip('"')
                 operator = " ".join(query_split[1:-1])
 
-                if operator in ["==", ">", ">=", "<", "<="]:
+                if operator in "==":
                     for data in result:
                         if key in data and eval(f"'{data[key]}' {operator} '{value}'"):
                             queried_result.append(data)
                 elif operator == "!=":
+                    # Obtains both data that is not the specified value and data that does not have the key attribute.
                     for data in result:
                         if key in data and not eval(
                             f"'{data[key]}' {operator} '{value}'"
@@ -276,6 +286,18 @@ class Files:
                             continue
                         else:
                             queried_result.append(data)
+                elif operator in [">", ">="]:
+                    for data in result:
+                        if key in data:
+                            s = sorted([data[key], value], key=natural_keys)
+                            if s[0] == value:
+                                queried_result.append(data)
+                elif operator in ["<", "<="]:
+                    for data in result:
+                        if key in data:
+                            s = sorted([data[key], value], key=natural_keys)
+                            if s[1] == value:
+                                queried_result.append(data)
                 elif operator in ["is", "is not"]:
                     for data in result:
                         if key in data and eval(f"{data[key]} {operator} {value}"):
