@@ -549,7 +549,7 @@ def search_files(
                 result_keys = list(result[0].keys())
                 output_csv = ",".join(result_keys)
                 for r in result:
-                    result_values = [r[k] for k in result_keys]
+                    result_values = [str(r[k]) for k in result_keys]
                     output_csv += "\n" + ",".join(result_values)
 
                 output_path = os.path.join(".", "dataset.csv")
