@@ -297,6 +297,7 @@ def show_project_detail(project, user_id, member_list):
     help="path for external meta-data file",
     required=False,
     default=None,
+    multiple=True,
 )
 @click.option(
     "-d",
@@ -326,6 +327,29 @@ def show_project_detail(project, user_id, member_list):
     default=None,
     multiple=True,
 )
+@click.option(
+    "--extract",
+    type=str,
+    help="flag for extract external file",
+    is_flag=True,
+    default=False,
+)
+@click.option(
+    "--estimate-rule",
+    type=str,
+    help="flag for estimate join rule",
+    is_flag=True,
+    default=False,
+)
+@click.option(
+    "--join-rule",
+    type=str,
+    help="file path for defining the join rule",
+    required=False,
+    default=None,
+)
+@click.option("-e", "--export", type=str, help="export file type", required=False)
+@click.option("-o", "--output", type=str, help="output file path", required=False)
 @click.option("--auto-approve", is_flag=True)
 @base_config
 def import_data(
@@ -337,6 +361,11 @@ def import_data(
     parse,
     additional,
     auto_approve,
+    extract,
+    estimate_rule,
+    join_rule,
+    export,
+    output,
     user_id,
 ):
     """
@@ -374,7 +403,15 @@ def import_data(
             )
         else:
             import_metafile(
-                project, path, additional, auto_approve
+                project,
+                path,
+                additional,
+                auto_approve,
+                extract,
+                estimate_rule,
+                join_rule,
+                export,
+                output,
             ) if external_file else import_dataset(
                 project, directory, extension, parse, additional
             )
@@ -452,18 +489,61 @@ path to your file: {files[0].split(directory)[-1]}"
         click.echo("Success!")
 
 
-def import_metafile(project, path, additional, auto_approve):
+def import_metafile(
+    project,
+    path,
+    additional,
+    auto_approve,
+    extract,
+    estimate_rule,
+    join_rule,
+    export,
+    output,
+):
     pjt = Project(project)
 
-    if path is None:
+    if (path is None) and (join_rule is None):
         path = click.prompt(
             "Where is your meta-data file? (select a path for an external meta-data file)",
             type=str,
         )
     try:
-        pjt.add_metafile(
-            file_path=path, attributes=additional, auto=auto_approve, verbose=True
-        )
+        if extract:
+            for pth in path:
+                result = pjt.extract_metafile(
+                    file_path=pth, attributes=additional, verbose=2
+                )
+                if export is not None:
+                    if export.lower() == "csv":
+                        for i, res in enumerate(result, 1):
+                            result_keys = list(res[0].keys())
+                            output_csv = ",".join(result_keys)
+                            for r in res:
+                                result_values = [str(r[k]) for k in result_keys]
+                                output_csv += "\n" + ",".join(result_values)
+
+                            output_path = os.path.join(".", f"Table{i}.csv")
+                            if output is not None:
+                                output_path = output
+                                os.makedirs(os.path.dirname(output), exist_ok=True)
+
+                            with open(output_path, "w", encoding="utf-8") as f:
+                                f.write(output_csv)
+                    else:
+                        click.echo(
+                            f"Sorry, export file type: {export} was not supprted yet..."
+                        )
+        elif estimate_rule:
+            for pth in path:
+                pjt.estimate_join_rule(file_path=pth, verbose=2)
+        else:
+            pjt.add_metafile(
+                file_path=path,
+                attributes=additional,
+                auto=auto_approve,
+                join_rule_path=join_rule,
+                verbose=1,
+            )
     except Exception as e:
         print(e)
     else:
@@ -521,6 +601,7 @@ def search_files(
         if you want hide detail
     """
     pjt = Project(project)
+    print(query)
     try:
         if conditions is not None:
             result = pjt.files(conditions=conditions, query=query).result
@@ -557,7 +638,7 @@ def search_files(
                     output_path = output
                     os.makedirs(os.path.dirname(output), exist_ok=True)
 
-                with open(output_path, "w") as f:
+                with open(output_path, "w", encoding="utf-8") as f:
                     f.write(output_csv)
             else:
                 click.echo(f"Sorry, export file type: {export} was not supprted yet...")
