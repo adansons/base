@@ -273,7 +273,7 @@ class Files:
                 value = query_split[-1].lstrip("'").rstrip("'").lstrip('"').rstrip('"')
                 operator = " ".join(query_split[1:-1])
 
-                if operator in "==":
+                if operator == "==":
                     for data in result:
                         if key in data and eval(f"'{data[key]}' {operator} '{value}'"):
                             queried_result.append(data)
