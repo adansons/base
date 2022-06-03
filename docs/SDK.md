@@ -773,6 +773,8 @@ These are the available methods:
 - [add_datafiles()](#adddatafiles)
 - [add_member()](#addmember)
 - [add_metafile()](#addmetafile)
+- [extract_metafile](#extractmetafile)
+- [estimate_join_rule](#estimatejoinrule)
 - [files()](#files)
 - [get_members()](#getmembers)
 - [get_metadata_summary()](#getmetadatasummary)
@@ -899,13 +901,13 @@ project.add_member(member="string", permission_level="string")
 Import meta data from external file.
 
 ```python
-project.add_metafile(file_path="string", attributes={"string":"string"})
+project.add_metafile(file_path=["string"], attributes={"string":"string"})
 ```
 
 **Parameters**
 
-- file_path (string) - requeired
-    - the external file path
+- file_path (list) - requeired
+    - list of the external file path
 - attributes (string) - default {}
     - the extra meta data (attributes) combined with whole datafiles
 
@@ -916,9 +918,89 @@ project.add_metafile(file_path="string", attributes={"string":"string"})
 - Exception
     - raises if something went wrong on uploading request to server
 
+### **extract_metafile()**
+
+Only Extract meta data from external file.
+
+```python
+project.extract_metafile(file_path="string", attributes={"string":"string"})
+```
+
+**Parameters**
+
+- file_path (string) - requeired
+    - the external file path
+- attributes (string) - default {}
+    - the extra meta data (attributes) combined with whole datafiles
+
+**Returns**
+- tables (list)
+    - list of table data extracted from external file
+
+```JavaScript
+[
+    [
+        {
+            "MetaKey1": ...,
+            "MetaKey2": ...,
+            ...
+        },
+        ...
+    ],
+    ...
+]
+```
+
+**Raises**
+
+- ValueError
+    - raises if specified external file is not csv or excel file
+- Exception
+    - raises if something went wrong on uploading request to server
+
+### **estimate_join_rule()**
+
+Only estimate the join rule from external file and existing table.
+
+```python
+project.extract_metafile(file_path="string", tables=list)
+```
+
+**Parameters**
+
+Either file_path or tables are required. If both are specified, tables take precedence.
+- file_path (string)
+    - the external file path
+- tables (list)
+    - output of base.Project().extract_metafile() method  
+
+
+
+**Returns**
+- join_rule (list)
+    - list of the join rule estimated from external file and existing table.
+
+```JavaScript
+[
+        {
+            "new key1":"exist key1" ...,
+            ...
+        },
+        ...
+]
+```
+
+
+**Raises**
+
+- ValueError
+    - raises if specified external file is not csv or excel file
+- Exception
+    - raises if something went wrong on uploading request to server
+
 ### **files()**
 
-Return the `[Files class](#files-class)`.
+Return the [`Files class`](#files-class).
 You can filter files easily and simply by specified criteria.
 
 ```python
@@ -982,7 +1064,7 @@ files = project.files(conditions="string", query=["string"], sort_key="string")
 
 **Returns**
 
-- `[Files class](#files-class)`
+- [`Files class`](#files-class)
 
 ### **get_members()**
 
