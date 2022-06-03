@@ -424,7 +424,6 @@ class Project:
         file_num = len(data_list)
         return file_num
 
-    ########################################################################################
     def extract_metafile(
         self,
         file_path: str,
@@ -566,8 +565,6 @@ class Project:
                 print(f"\nTable {i+1} sample record:\n\t{tables[i-1][0]}\n")
 
         return join_rules
-
-    ########################################################################################
 
     def add_metafile(
         self,
@@ -735,7 +732,7 @@ class Project:
                         \n# "New table key 2": "ADD:" + "Exist table key 2", <- if you have new value on exist key
                         \n# "New table key 3":   , <- if you have new key, no need to specify anything\n
                         \n# [Example]
-                        \n#  Keys:
+                        \n#  JoinRules:
                         \n#   first_name: name
                         \n#   age: ADD:Age
                         \n#   height:\n
