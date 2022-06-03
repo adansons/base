@@ -501,8 +501,7 @@ def import_metafile(
     output,
 ):
     pjt = Project(project)
-
-    if (path is None) and (join_rule is None):
+    if (path == ()) and (join_rule is None):
         path = click.prompt(
             "Where is your meta-data file? (select a path for an external meta-data file)",
             type=str,
@@ -522,7 +521,10 @@ def import_metafile(
                                 result_values = [str(r[k]) for k in result_keys]
                                 output_csv += "\n" + ",".join(result_values)
 
-                            output_path = os.path.join(".", f"Table{i}.csv")
+                            output_path = os.path.join(
+                                ".",
+                                f"{os.path.basename(pth.split('.')[0])}_Table{i}.csv",
+                            )
                             if output is not None:
                                 output_path = output
                                 os.makedirs(os.path.dirname(output), exist_ok=True)
@@ -601,7 +603,6 @@ def search_files(
         if you want hide detail
     """
     pjt = Project(project)
-    print(query)
     try:
         if conditions is not None:
             result = pjt.files(conditions=conditions, query=query).result
