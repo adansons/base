@@ -89,8 +89,8 @@ The following options are used only when importing external files.
 - `-p <external-filepath>`, `--path <external-filepath>` - specify an `external-filepath` to import external files. Base will parse content of that file, extract table data on it, and parse the tables.
 - `-a <additional-key-value>`, `--additional <additional-key-value>` - specify additional meta data you want to add whole the file you import. the value must be include colon (”:”) between `key name` and `value string`. for instance, if you want to import and join an external file for only “test” data type files, you should specify like `-x dataType:test`.
 - `--extract` - with this option, only extract the content of external file, dose not link and update with existing tables. you can specify output path with `-e` and `-o` options to get extract results.
-  - `-e <export-file-type>, --export <export-file-type>` - if you want to convert extract results into CSV, you can specify CSV as export-file-type.
-  - `-o <output-filepath>, --output <output-filepath>`- specify output-filepath to save dataset file. default is “./{external-filepath}_Table{number}.csv”
+  - `--export <export-file-type>` - if you want to convert extract results into CSV, you can specify CSV as export-file-type.
+  - `--output <output-filepath>`- specify output-filepath to save dataset file. default is “./{external-filepath}_Table{number}.csv”
 - `--estimate-rule` - with this option, only estimate the joining rule from existing tables and external files which specified with `-p` option, dose not link and update with existing tables.
 
 **Example: Import png files on project “mnist”**
