@@ -522,7 +522,7 @@ class Project:
             _, ext = os.path.splitext(file_path)
             if ext.lower() not in [".csv", ".xlsx"]:
                 raise ValueError(
-                    f"{ext} file is not supported. Currently only suports csv file."
+                    f"{ext} file is not supported. Currently only suports csv or xlsx file."
                 )
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
