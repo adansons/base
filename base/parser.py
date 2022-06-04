@@ -119,7 +119,7 @@ class Parser:
 
         parsed_dict = {}
         for key, value in zip(self.parsing_keys, parsed_values):
-            if key in  ["_", "[UnuseToken]"]:
+            if key in ["_", "[UnuseToken]"]:
                 continue
             parsed_dict[key] = value
 
@@ -333,8 +333,8 @@ class Parser:
             )
 
         return path
-    
-    def validate_parsing_rule(self)->bool:
+
+    def validate_parsing_rule(self) -> bool:
         """
         Check that the parsing_rule is valid
         Parameter
@@ -347,12 +347,11 @@ class Parser:
         """
         if len(self.parsing_keys) == 0:
             is_valid = False
-        elif len(self.parsing_keys) == 1 and self.parsing_keys[0] == '[UnuseToken]':
+        elif len(self.parsing_keys) == 1 and self.parsing_keys[0] == "[UnuseToken]":
             is_valid = False
         else:
             is_valid = True
         return is_valid
-
 
 
 if __name__ == "__main__":
