@@ -348,8 +348,8 @@ def show_project_detail(project, user_id, member_list):
     required=False,
     default=None,
 )
-@click.option("-e", "--export", type=str, help="export file type", required=False)
-@click.option("-o", "--output", type=str, help="output file path", required=False)
+@click.option("--export", type=str, help="export file type", required=False)
+@click.option("--output", type=str, help="output file path", required=False)
 @click.option("--auto-approve", is_flag=True)
 @base_config
 def import_data(
@@ -390,6 +390,7 @@ def import_data(
     auto_approve : bool, default=False
         approve estimated table joining rule
     """
+    print(extension)
     if additional is None:
         additional = {}
     else:
