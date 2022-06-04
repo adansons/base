@@ -178,9 +178,21 @@ def test_add_datafile():
     file_num = project.add_datafile(file_path, attributes)
 
 
-def test_add_metafile():
+def test_extract_metafile():
     project = Project(PROJECT_NAME)
     file_path = TESTS_DIR + "/data/sample.xlsx"
+    project.extract_metafile(file_path)
+
+
+def test_estimate_join_rule():
+    project = Project(PROJECT_NAME)
+    file_path = TESTS_DIR + "/data/sample.xlsx"
+    project.estimate_join_rule(file_path=file_path)
+
+
+def test_add_metafile():
+    project = Project(PROJECT_NAME)
+    file_path = [TESTS_DIR + "/data/sample.xlsx"]
     project.add_metafile(file_path, auto=True)
 
 
@@ -236,6 +248,8 @@ if __name__ == "__main__":
     test_get_projects()
     test_add_datafiles()
     test_add_datafile()
+    test_extract_metafile()
+    test_estimate_join_rule()
     test_add_metafile()
     test_get_metadata_summary()
     test_link_datafiles()
