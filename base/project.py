@@ -346,7 +346,11 @@ class Project:
             parser = Parser(parsing_rule)
             if detail_parsing_rule is not None:
                 parser.update_rule(detail_parsing_rule)
-
+            if not parser.validate_parsing_rule():
+                raise Exception(
+                    f"This parsing rule is not valid.\n\
+Make sure that the key is enclosed with `{{}}` in the parsing_rule."
+                )
             if not parser.is_path_parsable(
                 files[0].split(dir_path)[-1].replace(os.sep, "/")
             ):
