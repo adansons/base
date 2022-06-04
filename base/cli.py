@@ -390,7 +390,6 @@ def import_data(
     auto_approve : bool, default=False
         approve estimated table joining rule
     """
-    print(extension)
     if additional is None:
         additional = {}
     else:
