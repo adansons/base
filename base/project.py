@@ -535,7 +535,9 @@ class Project:
                 tables.append(table)
             except:
                 if verbose != 0:
-                    print("Specified file looks like messy. Base will extract tables from it.")
+                    print(
+                        "Specified file looks like messy. Base will extract tables from it."
+                    )
                 extracted_tables = self.extract_metafile(file_path=file_path, verbose=1)
                 for extracted_table in extracted_tables:
                     tables.append(extracted_table)
@@ -751,7 +753,9 @@ class Project:
             file_count = 1
             while True:
                 if os.path.exists(file_name):
-                    file_name = f"joinrule_definition_{self.project_name} ({file_count}).yml"
+                    file_name = (
+                        f"joinrule_definition_{self.project_name} ({file_count}).yml"
+                    )
                     file_count += 1
                 else:
                     break
@@ -1263,6 +1267,7 @@ def summarize_parsed_table(table: List[dict]) -> str:
     summary_for_print : str
         summarized table information
     """
+
     def select_vtype(vtype_list: list) -> str:
         if "str" in vtype_list:
             return "str"
@@ -1289,8 +1294,10 @@ def summarize_parsed_table(table: List[dict]) -> str:
         key_summary = {
             "UpperValue": unique_value[-1],
             "LowerValue": unique_value[0],
-            "ValueType": select_vtype(list(set(vt.__class__.__name__ for vt in unique_value))),
-            "RecordedCount": len(dic[k])
+            "ValueType": select_vtype(
+                list(set(vt.__class__.__name__ for vt in unique_value))
+            ),
+            "RecordedCount": len(dic[k]),
         }
         table_summary[k] = key_summary
 
@@ -1325,7 +1332,8 @@ def summarize_parsed_table(table: List[dict]) -> str:
                 content + " " * (length - len(content))
                 for content, length in zip(row, max_len_list)
             ]
-        ) for row in summary_list
+        )
+        for row in summary_list
     )
     return summary_for_print
 
