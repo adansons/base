@@ -516,6 +516,10 @@ def import_metafile(
                     if export.lower() == "csv":
                         for i, res in enumerate(result, 1):
                             result_keys = list(res[0].keys())
+                            for r in res:
+                                extra_keys = list(set(r.keys()) - set(result_keys))
+                                result_keys += extra_keys
+
                             output_csv = ",".join(result_keys)
                             for r in res:
                                 result_values = [str(r[k]) for k in result_keys]
@@ -529,6 +533,14 @@ def import_metafile(
                                 output_path = output
                                 os.makedirs(os.path.dirname(output), exist_ok=True)
 
+                            file_count = 1
+                            while True:
+                                if os.path.exists(output_path):
+                                    basename, ext = os.path.splitext(output_path)
+                                    output_path = f"{basename} ({file_count}){ext}"
+                                    file_count += 1
+                                else:
+                                    break
                             with open(output_path, "w", encoding="utf-8") as f:
                                 f.write(output_csv)
                     else:
@@ -625,10 +637,22 @@ def search_files(
                     output_path = output
                     os.makedirs(os.path.dirname(output), exist_ok=True)
 
+                file_count = 1
+                while True:
+                    if os.path.exists(output_path):
+                        basename, ext = os.path.splitext(output_path)
+                        output_path = f"{basename} ({file_count}){ext}"
+                        file_count += 1
+                    else:
+                        break
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(output_json)
             elif export.lower() == "csv":
-                result_keys = list(result[0].keys())
+                result_keys = []
+                for r in result:
+                    extra_keys = list(set(r.keys()) - set(result_keys))
+                    result_keys += extra_keys
+
                 output_csv = ",".join(result_keys)
                 for r in result:
                     result_values = [str(r[k]) for k in result_keys]
@@ -639,6 +663,14 @@ def search_files(
                     output_path = output
                     os.makedirs(os.path.dirname(output), exist_ok=True)
 
+                file_count = 1
+                while True:
+                    if os.path.exists(output_path):
+                        basename, ext = os.path.splitext(output_path)
+                        output_path = f"{basename} ({file_count}){ext}"
+                        file_count += 1
+                    else:
+                        break
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(output_csv)
             else:

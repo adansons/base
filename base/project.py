@@ -4,13 +4,12 @@
 # Please contact engineer@adansons.co.jp
 import os
 import json
-from click import Option
 import ruamel.yaml
 import glob
 import math
 import base64
 import requests
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Union
 import time
 from colorama import Fore, init
 
@@ -27,7 +26,7 @@ from base.config import (
     BASE_API_ENDPOINT,
 )
 
-# coloeama settings
+# colorama settings
 init(autoreset=True)
 
 HEADER = {"Content-Type": "application/json"}
@@ -440,8 +439,8 @@ class Project:
         attributes : dict (default {})
             the extra meta data (attributes) combined with whole datafiles
         verbose : int (default 2)
-            if verbose==2, show detail of each actions result
-            if verbose==1, show summary of each actions result
+            if verbose==2, show detail of each action result
+            if verbose==1, show summary of each action result
 
         Returns
         -------
@@ -479,13 +478,11 @@ class Project:
         res = requests.get(s3_presigned_url)
         tables = res.json()["Items"]
 
-        if verbose == 1:
+        if verbose != 0:
             print(f"{len(tables)} tables found! ({file_path})\n")
-        elif verbose == 2:
-            print(f"{len(tables)} tables found! ({file_path})")
+        if verbose == 2:
             for i, table in enumerate(tables, 1):
-                print(f"\n===== New Table{i} =====")
-                summarize_parsed_table(table)
+                print(f"===== New Table{i} =====\n{summarize_parsed_table(table)}\n")
         return tables
 
     def estimate_join_rule(
@@ -504,8 +501,8 @@ class Project:
         file_path : str
             the external file path
         verbose : bool (default True)
-            if verbose==2, show detail of each actions result
-            if verbose==1, show summary of each actions result
+            if verbose==2, show detail of each action result
+            if verbose==1, show summary of each action result
 
         Raises
         ------
@@ -516,6 +513,9 @@ class Project:
         """
         if verbose in [0, 1, 2]:
             print("now estimating the rule for table joining...")
+
+        if not (tables or file_path):
+            raise ValueError("You have to specify 'tables' or 'file_path'.")
 
         if tables is None:
             tables = []
@@ -534,6 +534,8 @@ class Project:
                     table.append({key[i]: v for i, v in enumerate(value.split(","))})
                 tables.append(table)
             except:
+                if verbose != 0:
+                    print("Specified file looks like messy. Base will extract tables from it.")
                 extracted_tables = self.extract_metafile(file_path=file_path, verbose=1)
                 for extracted_table in extracted_tables:
                     tables.append(extracted_table)
@@ -549,10 +551,9 @@ class Project:
             join_rule = res.json()["UpdateRule"]
             join_rules.append(json.dumps(join_rule, ensure_ascii=False))
 
-        if verbose == 1:
+        if verbose != 0:
             print(f"{len(join_rules)} table joining rule was estimated! ({file_path})")
         elif verbose == 2:
-            print(f"{len(join_rules)} table joining rule was estimated! ({file_path})")
             for i, join_rule in enumerate(join_rules):
                 print(f"\nRule no.{i+1}")
                 for new_key, exist_key in json.loads(join_rule).items():
@@ -594,13 +595,13 @@ class Project:
         auto : bool (default False)
             if True, skip to get confirmation
         verbose : bool (default True)
-            if True, show detail of each actions result
+            if True, show detail of each action result
             if you turn off auto mode, you will always get detail for confirmation
 
         Raises
         ------
         ValueError
-            raises if specified external file is not csv or excel file
+            raises if specified external file is not csv or excel file or invalid YML file specified as join_rule_path
         Exception
             raises if something went wrong on uploading request to server
         """
@@ -611,7 +612,7 @@ class Project:
                 file_path = [rule["FilePath"] for rule in list(join_rules.values())]
                 file_path = sorted(set(file_path), key=file_path.index)
             except:
-                raise Exception("Invalid YAML file. Unable to read FilePath.")
+                raise ValueError("Invalid YAML file. Unable to read FilePath.")
 
         tables = []
         tables_from_path = []
@@ -620,13 +621,12 @@ class Project:
             tables_ = self.extract_metafile(
                 file_path=path, attributes=attributes, verbose=verbose
             )
-            for table in tables_:
-                tables_from_path.append(path)
-                tables.append(table)
+            tables_from_path += [path] * len(tables_)
+            tables += tables_
 
         # get update_rule for each table
         if not (join_rule or join_rule_path):
-            join_rules = self.estimate_join_rule(tables=tables, verbose=0)
+            join_rules = self.estimate_join_rule(tables=tables, verbose=verbose)
             table_rule_pair = {}
             for table, join_rule in zip(tables, join_rules):
                 if join_rule in table_rule_pair:
@@ -655,7 +655,7 @@ class Project:
                     else:
                         table_rule_pair[join_rule] = [table]
             except:
-                raise Exception("Invalid YAML file.Unable to read JoinRules.")
+                raise ValueError("Invalid YAML file.Unable to read JoinRules.")
 
         if verbose == 1:
             print(f"{len(table_rule_pair)} table joining rule was estimated!\n")
@@ -748,19 +748,25 @@ class Project:
             yaml.default_flow_style = True
             yaml_str = yaml.load(yaml_str)
             file_name = f"joinrule_definition_{self.project_name}.yml"
+            file_count = 1
+            while True:
+                if os.path.exists(file_name):
+                    file_name = f"joinrule_definition_{self.project_name} ({file_count}).yml"
+                    file_count += 1
+                else:
+                    break
             with open(file_name, "w", encoding="utf-8") as yf:
                 yaml.dump(yaml_str, yf)
 
             print(
                 Fore.BLUE
                 + f"\nDownloaded a YAML file '{file_name}' in current directory.\n"
-                f"Key information for the new table and the existing table is as follows.\n"
+                f"Key information for the new table and the existing table is as follows.\n\n"
             )
             for i, table in enumerate(tables, 1):
-                print(f"\n===== New Table{i} =====")
-                summarize_parsed_table(table)
+                print(f"===== New Table{i} =====\n{summarize_parsed_table(table)}\n")
 
-            print(f"\n===== Existing Table =====")
+            print(f"===== Existing Table =====")
             summary_for_print = summarize_keys_information(self.get_metadata_summary())
             max_len_list = [
                 summary_for_print["MaxCharCount"][column]
@@ -796,7 +802,7 @@ class Project:
         Returns
         -------
         key_list : list
-            list of each keys information
+            list of each key information
             [
                 {
                     "KeyHash": String,
@@ -975,7 +981,7 @@ class Project:
         Returns
         -------
         member_list : list
-            list of each members information
+            list of each member information
             [
                 {
                     "UserID": String,
@@ -1242,7 +1248,7 @@ def summarize_keys_information(metadata_summary: List[dict]) -> dict:
     return summary_for_print
 
 
-def summarize_parsed_table(table: List[dict]) -> None:
+def summarize_parsed_table(table: List[dict]) -> str:
     """
     Summarize information of extracted table from external file for printing.
 
@@ -1250,7 +1256,25 @@ def summarize_parsed_table(table: List[dict]) -> None:
     ----------
     tables : list
         list of data extracted from external-file
+
+    Returns
+    -------
+
+    summary_for_print : str
+        summarized table information
     """
+    def select_vtype(vtype_list: list) -> str:
+        if "str" in vtype_list:
+            return "str"
+        elif "float" in vtype_list:
+            return "float"
+        elif "int" in vtype_list:
+            return "int"
+        elif "bool" in vtype_list:
+            return "bool"
+        else:
+            return "None"
+
     dic = {}
     for data in table:
         for k, v in data.items():
@@ -1259,17 +1283,17 @@ def summarize_parsed_table(table: List[dict]) -> None:
             else:
                 dic[k] = [v]
 
-    keyhash_to_summary = {}
+    table_summary = {}
     for k in dic.keys():
-        keyhash_to_summary[k] = {"KeyName": {k}}
         unique_value = sorted(set(dic[k]))
-        keyhash_to_summary[k]["UpperValue"] = unique_value[-1]
-        keyhash_to_summary[k]["LowerValue"] = unique_value[0]
-        value_types = list(set(i.__class__.__name__ for i in unique_value))
-        keyhash_to_summary[k]["ValueType"] = {i: {f"'{k}'"} for i in value_types}
-        keyhash_to_summary[k]["RecordedCount"] = len(table)
+        key_summary = {
+            "UpperValue": unique_value[-1],
+            "LowerValue": unique_value[0],
+            "ValueType": select_vtype(list(set(vt.__class__.__name__ for vt in unique_value))),
+            "RecordedCount": len(dic[k])
+        }
+        table_summary[k] = key_summary
 
-    recorded_count_list = []
     char_count = {
         "KEY NAME": [8],  # length of "KEY NAME"
         "VALUE RANGE": [11],  # length of "VALUE RANGE"
@@ -1277,59 +1301,33 @@ def summarize_parsed_table(table: List[dict]) -> None:
         "RECORDED COUNT": [14],  # length of "RECORDED COUNT"
     }
     summary_list = [("KEY NAME", "VALUE RANGE", "VALUE TYPE", "RECORDED COUNT")]
-    for key_summary in keyhash_to_summary.values():
-        key_name_summary = ",".join(
-            sorted([f"'{name}'" for name in key_summary["KeyName"]])
-        )
+    for key_name, key_summary in table_summary.items():
         value_range_summary = (
             f'{key_summary["LowerValue"]} ~ {key_summary["UpperValue"]}'
         )
-        value_type_summary = ", ".join(
-            [
-                f"{vtype}({','.join(list(name_list))})"
-                for vtype, name_list in key_summary["ValueType"].items()
-            ]
-        )
-
+        value_type_summary = f"{key_summary['ValueType']}('{key_name}')"
         summary = (
-            key_name_summary,
+            f"'{key_name}'",
             value_range_summary,
             value_type_summary,
             str(key_summary["RecordedCount"]),
         )
         summary_list.append(summary)
-
-        char_count["KEY NAME"].append(len(key_name_summary))
+        char_count["KEY NAME"].append(len(f"'{key_name}'"))
         char_count["VALUE RANGE"].append(len(value_range_summary))
         char_count["VALUE TYPE"].append(len(value_type_summary))
         char_count["RECORDED COUNT"].append(len(str(key_summary["RecordedCount"])))
 
-        recorded_count_list.append(key_summary["RecordedCount"])
-
-    summary_for_print = {
-        "MaxRecordedCount": max(recorded_count_list) if recorded_count_list else 0,
-        "UniqueKeyCount": len(summary_list) - 1,
-        "MaxCharCount": {
-            "KEY NAME": max(char_count["KEY NAME"]),
-            "VALUE RANGE": max(char_count["VALUE RANGE"]),
-            "VALUE TYPE": max(char_count["VALUE TYPE"]),
-            "RECORDED COUNT": max(char_count["RECORDED COUNT"]),
-        },
-        "Keys": summary_list,
-    }
-    max_len_list = [
-        summary_for_print["MaxCharCount"][column]
-        for column in summary_for_print["Keys"][0]
-    ]
-    for row in summary_for_print["Keys"]:
-        print(
-            "  ".join(
-                [
-                    content + " " * (length - len(content))
-                    for content, length in zip(row, max_len_list)
-                ]
-            )
-        )
+    max_len_list = [max(char_count[column]) for column in summary_list[0]]
+    summary_for_print = "\n".join(
+        "  ".join(
+            [
+                content + " " * (length - len(content))
+                for content, length in zip(row, max_len_list)
+            ]
+        ) for row in summary_list
+    )
+    return summary_for_print
 
 
 if __name__ == "__main__":
