@@ -84,10 +84,14 @@ And then, Base will take below actions.
     
     >>> sample parsing rule: {{}}/{{name}}/{{timestamp}}/{{sensor}}-{{condition}}{{iteration}}.csv
     ```
-    
+The following options are used only when importing external files.
 - `-m`, `--external-file` - parse the content of external files which specified with `-p` option.
 - `-p <external-filepath>`, `--path <external-filepath>` - specify an `external-filepath` to import external files. Base will parse content of that file, extract table data on it, and parse the tables.
 - `-a <additional-key-value>`, `--additional <additional-key-value>` - specify additional meta data you want to add whole the file you import. the value must be include colon (”:”) between `key name` and `value string`. for instance, if you want to import and join an external file for only “test” data type files, you should specify like `-x dataType:test`.
+- `--extract` - with this option, only extract the content of external file, dose not link and update with existing tables. you can specify output path with `-e` and `-o` options to get extract results.
+  - `--export <export-file-type>` - if you want to convert extract results into CSV, you can specify CSV as export-file-type.
+  - `--output <output-filepath>`- specify output-filepath to save dataset file. default is “./{external-filepath}_Table{number}.csv”
+- `--estimate-rule` - with this option, only estimate the joining rule from existing tables and external files which specified with `-p` option, dose not link and update with existing tables.
 
 **Example: Import png files on project “mnist”**
 
@@ -103,6 +107,7 @@ $ base import mnist --directory ~/dataset/mnist --extension png --parse "{dataTy
 ```
 Check datafiles...
 found 70000 files with png extension.
+70000/70000 files uploaded.   
 Success!
 ```
 </details>
@@ -141,11 +146,95 @@ Do you want to perform table join?
         Base will join tables with that rule described above.
 
         'y' will be accepted to approve.
-
+        If you need to modify it, please enter 'm'
+                Definition YML file with estimated table join rules will be downloaded, then you can modify it and apply the new join rule.
         Enter a value: y
 Success!
 ```
+If you enter 'm', definition YAML file with estimated table join rules will be downloaded.  
+You can modify this file and execute the commands displayed in the terminal to apply the new join rule.  
+
+```
+Do you want to perform table join?
+        Base will join tables with that rule described above.
+
+        'y' will be accepted to approve.
+
+        If you need to modify it, please enter 'm'
+                Definition YML file with estimated table join rules will be downloaded, then you can modify it and apply the new join rule.
+        Enter a value: m
+
+Downloaded a YAML file 'joinrule_definition_mnist.yml' in current directory.
+Key information for the new table and the existing table is as follows.
+
+
+===== New Table1 =====
+KEY NAME         VALUE RANGE  VALUE TYPE            RECORDED COUNT
+'index'          8 ~ 9850     int('index')          74            
+'originalLabel'  0 ~ 9        int('originalLabel')  74            
+'correction'     -1 ~ 8or9    str('correction')     74            
+'dataType'       test ~ test  str('dataType')       74            
+
+===== Existing Table =====
+KEY NAME    VALUE RANGE   VALUE TYPE       RECORDED COUNT
+'id'        0 ~ 59999     str('id')        70000         
+'label'     0 ~ 9         str('label')     70000         
+'dataType'  test ~ train  str('dataType')  70000          
+
+You can apply the new join-rule according to 2 steps.
+1. Modify the file 'joinrule_definition_mnist.yml'. Open the file to see a detailed description.
+2. Execute the following command.
+   base import mnist --external-file --additional dataType:test --join-rule joinrule_definition_mnist.yml
+
+Success!
+```
+joinrule_definition_mnist.yml
+```yaml
+RequestedTime: 1654257223.4988642
+ProjectName: mnist
+Body:
+  Table1:
+    FilePath: /Users/user/Downloads/wrongImagesInMNISTTestset.csv
+    JoinRules:
+      index: id
+      originalLabel: label
+      correction:
+      dataType: dataType
+```
+New join rules can be defined by modifying the `Body/Table/JoinRules` section.  
+Fundamentally, this section consists of Key-Value Pairs. Key is the key name from the new table extracted from the external file. Value is the key name from the existing table.
+
+How to define join rules.  
+if you have same key on the new table and the existing table, write like this.
+```yaml
+ 'New table key': 'Existing table key'
+```
+
+if you have new value on the existing key, write like this.
+```yaml
+ 'New table key': 'ADD:Existing table key'
+```
+
+if you have new key, no need to specify anything.
+```yaml
+ 'New table key': 
+```
+
+For example:
+```yaml
+ JoinRules:
+  first_name: name
+  age: ADD:Age
+  height:
+```
+1. "first_name: name" means to join the new key named "first_name" with the existing key named "name".
+2. "age: ADD:Age" means to add new values of the new key named 'age' on the existing key named 'Age'.
+3. "height: " means to add the key named "height" as a new key.
+
+
+
 </details>
+
 
 → [Back to top](#command-reference)
 
@@ -653,7 +742,7 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     ```
     [query grammar]
     {KeyName} {Operator} {Values}
-    - ¥add 1 spaces each section
+    - add 1 spaces each section
     - don't use space any other
     >>> sample query condition: CategoryName == airplane
     
@@ -664,7 +753,10 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     - <= : less than
     - > : greater
     - < : less
+    - is : missing value (only 'None' is allowed as Values, ex. query='correction is None')
+    - is not : any value (only 'None' is allowed as Values, ex. query='correction is not None')
     - in : inner list of Values
+    - not in : outer list of values
     ```
     
     > Note:  you have to follow query grammar.
