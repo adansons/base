@@ -216,7 +216,10 @@ class Project:
         files : Files class instance
         """
         files = Files(
-            self.project_name, conditions=conditions, query=query, sort_key=sort_key
+            self.project_name,
+            conditions=conditions,
+            query=query,
+            sort_key=sort_key,
         )
         return files
 
@@ -347,7 +350,11 @@ class Project:
             parser = Parser(parsing_rule)
             if detail_parsing_rule is not None:
                 parser.update_rule(detail_parsing_rule)
-
+            if not parser.validate_parsing_rule():
+                raise Exception(
+                    f"This parsing rule is not valid.\n\
+Make sure that the key is enclosed with `{{}}` in the parsing_rule."
+                )
             if not parser.is_path_parsable(
                 files[0].split(dir_path)[-1].replace(os.sep, "/")
             ):
@@ -703,7 +710,10 @@ class Project:
                     if i == 0:
                         payload = {"Items": table, "UpdateRule": update_rule}
                     else:
-                        payload = {"Items": table, "UpdateRule": update_rule_for_add}
+                        payload = {
+                            "Items": table,
+                            "UpdateRule": update_rule_for_add,
+                        }
                     res = requests.put(
                         url,
                         json.dumps(payload, ensure_ascii=False).encode("utf-8"),
@@ -1095,7 +1105,7 @@ class Project:
                     attrs[key_name] = {
                         "LowerValue": attr["LowerValue"],
                         "UpperValue": attr["UpperValue"],
-                        "ValueType": attr["UpperValue"],
+                        "ValueType": attr["ValueType"],
                         "RecordedCount": attr["RecordedCount"],
                     }
 
@@ -1111,7 +1121,7 @@ class Project:
                             attrs[",".join(sorted(c | {key_name}))] = {
                                 "LowerValue": attr["LowerValue"],
                                 "UpperValue": attr["UpperValue"],
-                                "ValueType": attr["UpperValue"],
+                                "ValueType": attr["ValueType"],
                                 "RecordedCount": attr["RecordedCount"],
                             }
 
