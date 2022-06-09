@@ -99,6 +99,38 @@ def test_import_dataset():
     assert "Success!" in result.output
 
 
+def test_import_metafile_extract():
+    runner = CliRunner()
+    result = runner.invoke(
+        import_data,
+        [
+            PROJECT_NAME,
+            "-m",
+            "-p",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
+            "--extract",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "Success!" in result.output
+
+
+def test_import_metafile_estimate_rule():
+    runner = CliRunner()
+    result = runner.invoke(
+        import_data,
+        [
+            PROJECT_NAME,
+            "-m",
+            "-p",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
+            "--estimate-rule",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "Success!" in result.output
+
+
 def test_import_metafile():
     runner = CliRunner()
     result = runner.invoke(
@@ -107,9 +139,41 @@ def test_import_metafile():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.xlsx",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
             "--auto-approve",
         ],
+    )
+    assert result.exit_code == 0
+    assert "Success!" in result.output
+
+
+def test_import_metafile_modify():
+    runner = CliRunner()
+    result = runner.invoke(
+        import_data,
+        [
+            PROJECT_NAME,
+            "-m",
+            "-p",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
+        ],
+        input="m",
+    )
+    assert result.exit_code == 0
+    assert "Success!" in result.output
+
+
+def test_import_metafile_modify_join_rule_file():
+    runner = CliRunner()
+    result = runner.invoke(
+        import_data,
+        [
+            PROJECT_NAME,
+            "-m",
+            "--join-rule",
+            "joinrule_definition_adansons_test_project.yml",
+        ],
+        input="y",
     )
     assert result.exit_code == 0
     assert "Success!" in result.output
@@ -123,7 +187,7 @@ def test_import_metafile_exkeyvalue():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.xlsx",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
             "-a",
             "key1:value1",
             "--auto-approve",
@@ -141,7 +205,7 @@ def test_import_metafile_exkeyvalue_multiple():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.xlsx",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
             "-a",
             "key1:value1",
             "-a",
@@ -161,7 +225,7 @@ def test_import_metafile_exkeyvalue_invalid():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.xlsx",
+            os.path.join(os.path.dirname(__file__), "data", "sample.xlsx"),
             "-a",
             "key1-value1",
             "--auto-approve",
@@ -179,7 +243,7 @@ def test_import_metafile_csv():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.csv",
+            os.path.join(os.path.dirname(__file__), "data", "sample.csv"),
             "--auto-approve",
         ],
     )
@@ -195,7 +259,7 @@ def test_import_metafile_csv_exkeyvalue():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.csv",
+            os.path.join(os.path.dirname(__file__), "data", "sample.csv"),
             "-a",
             "key1:value1",
             "--auto-approve",
@@ -213,7 +277,7 @@ def test_import_metafile_csv_exkeyvalue_multiple():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.csv",
+            os.path.join(os.path.dirname(__file__), "data", "sample.csv"),
             "-a",
             "key1:value1",
             "-a",
@@ -249,7 +313,7 @@ def test_import_metafile_csv_exkeyvalue_invalid():
             PROJECT_NAME,
             "-m",
             "-p",
-            os.path.dirname(__file__) + "/data/sample.csv",
+            os.path.join(os.path.dirname(__file__), "data", "sample.csv"),
             "-a",
             "key1-value1",
         ],
@@ -344,7 +408,11 @@ if __name__ == "__main__":
     test_list_project()
     test_show_project_detail()
     test_import_dataset()
+    test_import_metafile_extract()
+    test_import_metafile_estimate_rule()
     test_import_metafile()
+    test_import_metafile_modify()
+    test_import_metafile_modify_join_rule_file()
     test_import_metafile_exkeyvalue()
     test_import_metafile_exkeyvalue_multiple()
     test_import_metafile_csv_exkeyvalue()

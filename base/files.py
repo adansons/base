@@ -278,7 +278,6 @@ class Files:
                         if key in data and eval(f"'{data[key]}' {operator} '{value}'"):
                             queried_result.append(data)
                 elif operator == "!=":
-                    # Obtains both data that is not the specified value and data that does not have the key attribute.
                     for data in result:
                         if key in data and not eval(
                             f"'{data[key]}' {operator} '{value}'"
@@ -298,9 +297,17 @@ class Files:
                             s = sorted([data[key], value], key=natural_keys)
                             if s[1] == value:
                                 queried_result.append(data)
-                elif operator in ["is", "is not"]:
+                elif operator == ["is", "is not"]:
+                    # in python, "is" and "is not" operators allowed to compare with `None`
+                    # so, if other values set as 'value', raise ValueError
+                    if value != "None":
+                        raise ValueError(
+                            "Only 'None' is allowed with `is` or `is not` operators."
+                        )
                     for data in result:
-                        if key in data and eval(f"{data[key]} {operator} {value}"):
+                        if (operator == "is" and key not in data) or (
+                            operator == "is not" and key in data
+                        ):
                             queried_result.append(data)
                 elif operator in ["in", "not in"]:
                     for data in result:

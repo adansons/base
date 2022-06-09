@@ -4,12 +4,14 @@
 # Please contact engineer@adansons.co.jp
 import os
 import json
+import ruamel.yaml
 import glob
 import math
 import base64
 import requests
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Union
 import time
+from colorama import Fore, init
 
 from base.files import Files
 from base.parser import Parser
@@ -24,6 +26,8 @@ from base.config import (
     BASE_API_ENDPOINT,
 )
 
+# colorama settings
+init(autoreset=True)
 
 HEADER = {"Content-Type": "application/json"}
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".base", "projects")
@@ -426,16 +430,14 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         file_num = len(data_list)
         return file_num
 
-    def add_metafile(
+    def extract_metafile(
         self,
         file_path: str,
         attributes: dict = {},
-        join_rule: dict = {},
-        auto: bool = False,
-        verbose: bool = True,
-    ) -> None:
+        verbose: int = 2,
+    ):
         """
-        Import meta data from external file.
+        Extract meta data from external file.
 
         Parameters
         ----------
@@ -443,18 +445,14 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
             the external file path
         attributes : dict (default {})
             the extra meta data (attributes) combined with whole datafiles
-        join_rule : dict (default {})
-            the rule for table joining
-            {
-                "New table key 1": "Exist table key 1", <- if you have same key on new and exist tables
-                "New table key 2": "ADD:" + "Exist table key 2", <- if you have mew value on exist key
-                "New table key 3": None <- if you have new key
-            }
-        auto : bool (default False)
-            if True, skip to get confirmation
-        verbose : bool (default True)
-            if True, show detail of each actions result
-            if you turn off auto mode, you will always get detail for confirmation
+        verbose : int (default 2)
+            if verbose==2, show detail of each action result
+            if verbose==1, show summary of each action result
+
+        Returns
+        -------
+        tables: list
+            list of data extracted from external-file
 
         Raises
         ------
@@ -486,38 +484,190 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         s3_presigned_url = res.json()["URL"]
         res = requests.get(s3_presigned_url)
         tables = res.json()["Items"]
-        if verbose:
-            print(f"{len(tables)} tables found!")
-            print("now estimating the rule for table joining...\n")
+
+        if verbose != 0:
+            print(f"{len(tables)} tables found! ({file_path})\n")
+        if verbose == 2:
+            for i, table in enumerate(tables, 1):
+                print(f"===== New Table{i} =====\n{summarize_parsed_table(table)}\n")
+        return tables
+
+    def estimate_join_rule(
+        self,
+        tables: Optional[list] = None,
+        file_path: Optional[str] = None,
+        verbose: int = 2,
+    ):
+        """
+        Estimate join rule from external file and existing table.
+
+        Parameters
+        ----------
+        tables : list
+            list of data extracted from external-file
+        file_path : str
+            the external file path
+        verbose : bool (default True)
+            if verbose==2, show detail of each action result
+            if verbose==1, show summary of each action result
+
+        Raises
+        ------
+        ValueError
+            raises if specified external file is not csv or excel file
+        Exception
+            raises if something went wrong on uploading request to server
+        """
+        if verbose in [0, 1, 2]:
+            print("now estimating the rule for table joining...")
+
+        if not (tables or file_path):
+            raise ValueError("You have to specify 'tables' or 'file_path'.")
+
+        if tables is None:
+            tables = []
+            _, ext = os.path.splitext(file_path)
+            if ext.lower() not in [".csv", ".xlsx"]:
+                raise ValueError(
+                    f"{ext} file is not supported. Currently only suports csv or xlsx file."
+                )
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    csv_data = f.read()
+                key = csv_data.split("\n")[0].split(",")
+                values = csv_data.split("\n")[1:]
+                table = []
+                for value in values:
+                    table.append({key[i]: v for i, v in enumerate(value.split(","))})
+                tables.append(table)
+            except:
+                if verbose != 0:
+                    print(
+                        "Specified file looks like messy. Base will extract tables from it."
+                    )
+                extracted_tables = self.extract_metafile(file_path=file_path, verbose=1)
+                for extracted_table in extracted_tables:
+                    tables.append(extracted_table)
+
+        join_rules = []
+        for table in tables:
+            url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
+            payload = {"Items": table}
+            res = requests.put(url, json.dumps(payload), headers=HEADER)
+            if res.status_code != 200:
+                raise Exception("Failed to estimate the joining rule")
+
+            join_rule = res.json()["UpdateRule"]
+            join_rules.append(json.dumps(join_rule, ensure_ascii=False))
+
+        if verbose != 0:
+            print(f"{len(join_rules)} table joining rule was estimated! ({file_path})")
+        if verbose == 2:
+            for i, join_rule in enumerate(join_rules):
+                print(f"\nRule no.{i+1}")
+                for new_key, exist_key in json.loads(join_rule).items():
+                    if exist_key:
+                        print(
+                            f"\tkey '{new_key}'\t->\tconnected to '{exist_key}' key on exist table"
+                        )
+                    else:
+                        print(f"\tkey '{new_key}'\t->\tnewly added")
+                print(f"\nTable {i+1} sample record:\n\t{tables[i-1][0]}\n")
+
+        return join_rules
+
+    def add_metafile(
+        self,
+        file_path: Optional[tuple] = None,
+        attributes: dict = {},
+        join_rule: dict = {},
+        auto: bool = False,
+        join_rule_path: str = None,
+        verbose: int = 1,
+    ) -> None:
+        """
+        Import meta data from external file.
+
+        Parameters
+        ----------
+        file_path : str
+            the external file path
+        attributes : dict (default {})
+            the extra meta data (attributes) combined with whole datafiles
+        join_rule : dict (default {})
+            the rule for table joining
+            {
+                "New table key 1": "Exist table key 1", <- if you have same key on new and exist tables
+                "New table key 2": "ADD:" + "Exist table key 2", <- if you have new value on exist key
+                "New table key 3": None <- if you have new key
+            }
+        auto : bool (default False)
+            if True, skip to get confirmation
+        verbose : bool (default True)
+            if True, show detail of each action result
+            if you turn off auto mode, you will always get detail for confirmation
+
+        Raises
+        ------
+        ValueError
+            raises if specified external file is not csv or excel file or invalid YML file specified as join_rule_path
+        Exception
+            raises if something went wrong on uploading request to server
+        """
+        if join_rule_path:
+            try:
+                with open(join_rule_path, "r", encoding="utf-8") as yf:
+                    join_rules = ruamel.yaml.safe_load(yf)["Body"]
+                file_path = [rule["FilePath"] for rule in list(join_rules.values())]
+                file_path = sorted(set(file_path), key=file_path.index)
+            except:
+                raise ValueError("Invalid YAML file. Unable to read FilePath.")
+
+        tables = []
+        tables_from_path = []
+        for path in file_path:
+            # extract table from meta file
+            tables_ = self.extract_metafile(
+                file_path=path, attributes=attributes, verbose=verbose
+            )
+            tables_from_path += [path] * len(tables_)
+            tables += tables_
 
         # get update_rule for each table
-        if not join_rule:
-            update_rules = []
-            for table in tables:
-                url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
-                payload = {"Items": table}
-                res = requests.put(url, json.dumps(payload), headers=HEADER)
-                if res.status_code != 200:
-                    raise Exception("Failed to estimate the joining rule")
-
-                update_rule = res.json()["UpdateRule"]
-                update_rules.append(json.dumps(update_rule, ensure_ascii=False))
-
+        if not (join_rule or join_rule_path):
+            join_rules = self.estimate_join_rule(tables=tables, verbose=verbose)
             table_rule_pair = {}
-            for table, update_rule in zip(tables, update_rules):
-                if update_rule in table_rule_pair:
-                    table_rule_pair[update_rule].append(table)
+            for table, join_rule in zip(tables, join_rules):
+                if join_rule in table_rule_pair:
+                    table_rule_pair[join_rule].append(table)
                 else:
-                    table_rule_pair[update_rule] = [table]
-            if verbose:
-                print(f"{len(table_rule_pair)} table joining rule was estimated!")
-        else:
+                    table_rule_pair[join_rule] = [table]
+        elif join_rule:
             if len(tables) != 1:
                 raise ValueError(
                     "You can use join_rule option when you have only 1 table on external file."
                 )
             table_rule_pair = {json.dumps(join_rule, ensure_ascii=False): tables}
-        if verbose:
+        elif join_rule_path:
+            try:
+                with open(join_rule_path, "r", encoding="utf-8") as yf:
+                    join_rules = ruamel.yaml.safe_load(yf)["Body"]
+
+                join_rules = [
+                    json.dumps(rule["JoinRules"], ensure_ascii=False)
+                    for rule in list(join_rules.values())
+                ]
+                table_rule_pair = {}
+                for table, join_rule in zip(tables, join_rules):
+                    if join_rule in table_rule_pair:
+                        table_rule_pair[join_rule].append(table)
+                    else:
+                        table_rule_pair[join_rule] = [table]
+            except:
+                raise ValueError("Invalid YAML file.Unable to read JoinRules.")
+
+        if verbose == 1:
+            print(f"{len(table_rule_pair)} table joining rule was estimated!\n")
             print("Below table joining rule will be applied...\n\n")
             for i, update_rule in enumerate(list(table_rule_pair.keys())):
                 print(f"Rule no.{i+1}\n")
@@ -537,12 +687,16 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                 "\nDo you want to perform table join?\n\tBase will join tables with that rule described above.\n"
             )
             print("\t'y' will be accepted to approve.\n")
-            approved = True if input("\tEnter a value: ") == "y" else False
+            if not join_rule_path:
+                print(
+                    "\tIf you need to modify it, please enter 'm'\n\t\tDefinition YML file with estimated table join rules will be downloaded, then you can modify it and apply the new join rule."
+                )
+            approved = input("\tEnter a value: ")
         else:
-            approved = True
+            approved = "y"
 
         # update records
-        if approved:
+        if approved == "y":
             for update_rule, tables in table_rule_pair.items():
                 update_rule = json.loads(update_rule)
                 update_rule_for_add = {}
@@ -567,6 +721,91 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                     )
                     if res.status_code != 200:
                         raise Exception("Failed to join the tables")
+        elif approved == "m" and (not join_rule_path):
+            join_rules_info = {
+                "RequestedTime": time.time(),
+                "ProjectName": self.project_name,
+                "Body": {},
+            }
+            for i, rule in enumerate(join_rules, 1):
+                join_rules_info["Body"][f"Table{i}"] = {
+                    "FilePath": os.path.abspath(tables_from_path[i - 1]),
+                    "JoinRules": json.loads(rule),
+                }
+
+            yaml_str = ruamel.yaml.round_trip_dump(
+                join_rules_info, default_flow_style=False
+            )
+            yaml_str += """\n# [Description]
+                        \n# By modifying the Body/Table/JoinRules section, you can define a new join rule.
+                        \n# Fundamentally, this section consists of Key-Value Pairs. 
+                        \n# Key is the key name from the new table. Value is the key name from the existing table.\n
+                        \n# "New table key 1": "Exist table key 1", <- if you have same key on new and exist tables
+                        \n# "New table key 2": "ADD:" + "Exist table key 2", <- if you have new value on exist key
+                        \n# "New table key 3":   , <- if you have new key, no need to specify anything\n
+                        \n# [Example]
+                        \n#  JoinRules:
+                        \n#   first_name: name
+                        \n#   age: ADD:Age
+                        \n#   height:\n
+                        \n# The Key-Value above defines 3 join-rules. 
+                        \n# 1. "first_name: name" means to join the new key named "first_name" with the existing key named "name".
+                        \n#    If you have same key on the new and the existing tables, write like this.
+                        \n# 2. "age: ADD:Age" means to add new values of the new key named 'age' on the existing key named 'Age'.
+                        \n#    If you have new value on the existing key, write like this.
+                        \n# 3. "height: " means to add the key named "height" as a new key.
+                        \n#    If the new key is not in the existing table, write like this."""
+
+            yaml = ruamel.yaml.YAML()
+            yaml.default_flow_style = True
+            yaml_str = yaml.load(yaml_str)
+            file_name = f"joinrule_definition_{self.project_name}.yml"
+            file_count = 1
+            while True:
+                if os.path.exists(file_name):
+                    file_name = (
+                        f"joinrule_definition_{self.project_name} ({file_count}).yml"
+                    )
+                    file_count += 1
+                else:
+                    break
+            with open(file_name, "w", encoding="utf-8") as yf:
+                yaml.dump(yaml_str, yf)
+
+            print(
+                Fore.BLUE
+                + f"\nDownloaded a YAML file '{file_name}' in current directory.\n"
+                f"Key information for the new table and the existing table is as follows.\n\n"
+            )
+            for i, table in enumerate(tables, 1):
+                print(f"===== New Table{i} =====\n{summarize_parsed_table(table)}\n")
+
+            print(f"===== Existing Table =====")
+            summary_for_print = summarize_keys_information(self.get_metadata_summary())
+            max_len_list = [
+                summary_for_print["MaxCharCount"][column]
+                for column in summary_for_print["Keys"][0]
+            ]
+            for row in summary_for_print["Keys"]:
+                print(
+                    "  ".join(
+                        [
+                            content + " " * (length - len(content))
+                            for content, length in zip(row, max_len_list)
+                        ]
+                    )
+                )
+
+            attr_str = ""
+            if attributes:
+                for attr in list(attributes.items()):
+                    attr_str += " --additional " + ":".join(attr)
+
+            print(
+                Fore.BLUE + f"\nYou can apply the new join-rule according to 2 steps.\n"
+                f"1. Modify the file '{file_name}'. Open the file to see a detailed description.\n"
+                f"2. Execute the following command.\n   base import {self.project_name} --external-file{attr_str} --join-rule {file_name}\n"
+            )
         else:
             raise Exception("Aborted!")
 
@@ -577,7 +816,7 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         Returns
         -------
         key_list : list
-            list of each keys information
+            list of each key information
             [
                 {
                     "KeyHash": String,
@@ -756,7 +995,7 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         Returns
         -------
         member_list : list
-            list of each members information
+            list of each member information
             [
                 {
                     "UserID": String,
@@ -1019,6 +1258,93 @@ def summarize_keys_information(metadata_summary: List[dict]) -> dict:
         },
         "Keys": summary_list,
     }
+
+    return summary_for_print
+
+
+def summarize_parsed_table(table: List[dict]) -> str:
+    """
+    Summarize information of extracted table from external file for printing.
+
+    Parameters
+    ----------
+    tables : list
+        list of data extracted from external-file
+
+    Returns
+    -------
+
+    summary_for_print : str
+        summarized table information
+    """
+
+    def select_vtype(vtype_list: list) -> str:
+        if "str" in vtype_list:
+            return "str"
+        elif "float" in vtype_list:
+            return "float"
+        elif "int" in vtype_list:
+            return "int"
+        elif "bool" in vtype_list:
+            return "bool"
+        else:
+            return "None"
+
+    dic = {}
+    for data in table:
+        for k, v in data.items():
+            if dic.get(k):
+                dic[k].append(v)
+            else:
+                dic[k] = [v]
+
+    table_summary = {}
+    for k in dic.keys():
+        unique_value = sorted(set(dic[k]))
+        key_summary = {
+            "UpperValue": unique_value[-1],
+            "LowerValue": unique_value[0],
+            "ValueType": select_vtype(
+                list(set(vt.__class__.__name__ for vt in unique_value))
+            ),
+            "RecordedCount": len(dic[k]),
+        }
+        table_summary[k] = key_summary
+
+    char_count = {
+        "KEY NAME": [8],  # length of "KEY NAME"
+        "VALUE RANGE": [11],  # length of "VALUE RANGE"
+        "VALUE TYPE": [10],  # length of "VALUE TYPE"
+        "RECORDED COUNT": [14],  # length of "RECORDED COUNT"
+    }
+    summary_list = [("KEY NAME", "VALUE RANGE", "VALUE TYPE", "RECORDED COUNT")]
+    for key_name, key_summary in table_summary.items():
+        value_range_summary = (
+            f'{key_summary["LowerValue"]} ~ {key_summary["UpperValue"]}'
+        )
+        value_type_summary = f"{key_summary['ValueType']}('{key_name}')"
+        summary = (
+            f"'{key_name}'",
+            value_range_summary,
+            value_type_summary,
+            str(key_summary["RecordedCount"]),
+        )
+        summary_list.append(summary)
+        char_count["KEY NAME"].append(len(f"'{key_name}'"))
+        char_count["VALUE RANGE"].append(len(value_range_summary))
+        char_count["VALUE TYPE"].append(len(value_type_summary))
+        char_count["RECORDED COUNT"].append(len(str(key_summary["RecordedCount"])))
+
+    max_len_list = [max(char_count[column]) for column in summary_list[0]]
+    summary_for_print = "\n".join(
+        "  ".join(
+            [
+                content + " " * (length - len(content))
+                for content, length in zip(row, max_len_list)
+            ]
+        )
+        for row in summary_list
+    )
     return summary_for_print
 
 
