@@ -301,9 +301,13 @@ class Files:
                     # in python, "is" and "is not" operators allowed to compare with `None`
                     # so, if other values set as 'value', raise ValueError
                     if value != "None":
-                        raise ValueError("Only 'None' is allowed with `is` or `is not` operators.")
+                        raise ValueError(
+                            "Only 'None' is allowed with `is` or `is not` operators."
+                        )
                     for data in result:
-                        if (operator == "is" and key not in data) or (operator == "is not" and key in data):
+                        if (operator == "is" and key not in data) or (
+                            operator == "is not" and key in data
+                        ):
                             queried_result.append(data)
                 elif operator in ["in", "not in"]:
                     for data in result:
