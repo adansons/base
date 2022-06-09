@@ -555,7 +555,7 @@ class Project:
 
         if verbose != 0:
             print(f"{len(join_rules)} table joining rule was estimated! ({file_path})")
-        elif verbose == 2:
+        if verbose == 2:
             for i, join_rule in enumerate(join_rules):
                 print(f"\nRule no.{i+1}")
                 for new_key, exist_key in json.loads(join_rule).items():
