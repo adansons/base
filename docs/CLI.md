@@ -742,7 +742,7 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     ```
     [query grammar]
     {KeyName} {Operator} {Values}
-    - ¥add 1 spaces each section
+    - add 1 spaces each section
     - don't use space any other
     >>> sample query condition: CategoryName == airplane
     
@@ -753,7 +753,10 @@ And also you can export as JSON or CSV with `-e` and `-o` options.
     - <= : less than
     - > : greater
     - < : less
+    - is : missing value (only 'None' is allowed as Values, ex. query='correction is None')
+    - is not : any value (only 'None' is allowed as Values, ex. query='correction is not None')
     - in : inner list of Values
+    - not in : outer list of values
     ```
     
     > Note:  you have to follow query grammar.

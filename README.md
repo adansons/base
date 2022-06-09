@@ -137,7 +137,7 @@ after downloading, you can see data files in ~/dataset/mnist.
 
 ### Step 1. create a new project
 
-create mnist project with [base new <project>](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#70af41e65b51453f9b6807dc29354002) command.
+create mnist project with [base new <project>](/docs/CLI.md#new) command.
 
 ```bash
 base new mnist
@@ -263,7 +263,7 @@ You can use these operators below in the query option.
   not in : not inner list of Values
 ```
 
-(check [search docs](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083#698aab257e884e6a82cf470ec7f459dc) for more information).
+(check [search docs](/docs/CLI.md#search) for more information).
 
 ```bash
 base search mnist --conditions "train" --query "label in ['1','2','3']"
@@ -288,7 +288,7 @@ If you want to use the 'OR search' with the `--query` command, please use our Py
 
 ### Step 5. filter and export dataset with Python SDK
 
-in python script, you can filter and export datasets easily and simply with `Project class` and `Files class`. (see [SDK docs](https://vast-bus-1c4.notion.site/Python-Reference-e4b62aee4eee47caa96b7f436d6658cd))
+in python script, you can filter and export datasets easily and simply with `Project class` and `Files class`. (see [SDK docs](/docs/SDK.md#project-class))
 
 (If you don't have the packages below, please install them by using `pip`)
 ```bash
@@ -365,8 +365,8 @@ eval_dataset = Dataset(eval_files, target_key="label", transform=preprocess_func
 
 ### 4.1 Command Reference
 
-[Command Reference](https://vast-bus-1c4.notion.site/Command-Reference-20fe913cdf2541cc90812f69de0ae083)
+[Command Reference](/docs/CLI.md)
 
 ### 4.2 Python Reference
 
-[Python Reference](https://vast-bus-1c4.notion.site/Python-Reference-e4b62aee4eee47caa96b7f436d6658cd)
+[Python Reference](/docs/SDK.md)
