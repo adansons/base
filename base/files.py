@@ -263,64 +263,84 @@ class Files:
         def natural_keys(obj):
             return [number_to_int(c) for c in re.split(r"(\d+)", str(obj))]
 
+        unquote = lambda v: v.lstrip("'").rstrip("'").lstrip('"').rstrip('"')
+
         for q in query:
             queried_result = []
-            try:
-                # if q = "label <= 7" or  q = "label <= '7'"
-                # key = "label", value = "7", operator = "<="
-                query_split = q.split()
+
+            query_split = q.split(" ", 2)
+            if len(query_split) < 3 or query_split[1] not in [
+                "==",
+                "!=",
+                ">",
+                ">=",
+                "<",
+                "<=",
+                "in",
+                "is",
+                "not",
+            ]:
+                raise ValueError(
+                    "Invalid query grammar. See docs about query option.\nhttps://github.com/adansons/base/blob/main/docs/CLI.md#search"
+                )
+
+            # if q = "label <= 7" or  q = "label <= '7'"
+            # key = "label", value = "7", operator = "<="
+            if query_split[1] in ["in", "is", "not"]:
                 key = query_split[0]
-                value = query_split[-1].lstrip("'").rstrip("'").lstrip('"').rstrip('"')
+                qs_ = query_split[2].split(" ", 1)
+                value = unquote(qs_[-1])
+                operator = " ".join([query_split[1]] + qs_[:-1])
+            else:
+                key = query_split[0]
+                value = unquote(query_split[-1])
                 operator = " ".join(query_split[1:-1])
 
-                if operator == "==":
-                    for data in result:
-                        if key in data and eval(f"'{data[key]}' {operator} '{value}'"):
+            if operator == "==":
+                for data in result:
+                    if key in data and eval(f"'{data[key]}' {operator} '{value}'"):
+                        queried_result.append(data)
+            elif operator == "!=":
+                for data in result:
+                    if key in data and not eval(f"'{data[key]}' {operator} '{value}'"):
+                        continue
+                    else:
+                        queried_result.append(data)
+            elif operator in [">", ">="]:
+                for data in result:
+                    if key in data:
+                        s = sorted([data[key], value], key=natural_keys)
+                        if s[0] == value:
                             queried_result.append(data)
-                elif operator == "!=":
-                    for data in result:
-                        if key in data and not eval(
-                            f"'{data[key]}' {operator} '{value}'"
-                        ):
-                            continue
-                        else:
+            elif operator in ["<", "<="]:
+                for data in result:
+                    if key in data:
+                        s = sorted([data[key], value], key=natural_keys)
+                        if s[1] == value:
                             queried_result.append(data)
-                elif operator in [">", ">="]:
-                    for data in result:
-                        if key in data:
-                            s = sorted([data[key], value], key=natural_keys)
-                            if s[0] == value:
-                                queried_result.append(data)
-                elif operator in ["<", "<="]:
-                    for data in result:
-                        if key in data:
-                            s = sorted([data[key], value], key=natural_keys)
-                            if s[1] == value:
-                                queried_result.append(data)
-                elif operator == ["is", "is not"]:
-                    # in python, "is" and "is not" operators allowed to compare with `None`
-                    # so, if other values set as 'value', raise ValueError
-                    if value != "None":
-                        raise ValueError(
-                            "Only 'None' is allowed with `is` or `is not` operators."
-                        )
-                    for data in result:
-                        if (operator == "is" and key not in data) or (
-                            operator == "is not" and key in data
-                        ):
-                            queried_result.append(data)
-                elif operator in ["in", "not in"]:
-                    for data in result:
-                        if key in data and eval(f"'{data[key]}' {operator} {value}"):
-                            queried_result.append(data)
-                else:
+            elif operator in ["is", "is not"]:
+                # in python, "is" and "is not" operators allowed to compare with `None`
+                # so, if other values set as 'value', raise ValueError
+                if value != "None":
                     raise ValueError(
-                        f"Specified operator '{operator}' was blocked for the security."
+                        "Only 'None' is allowed with `is` or `is not` operators."
                     )
-            except:
-                raise ValueError("Invalid query parameters.")
+                for data in result:
+                    if (operator == "is" and key not in data) or (
+                        operator == "is not" and key in data
+                    ):
+                        queried_result.append(data)
+            elif operator in ["in", "not in"]:
+                value = [unquote(v) for v in re.split("[ ,]", value[1:-1]) if v != ""]
+                for data in result:
+                    if key in data and eval(f"'{data[key]}' {operator} {value}"):
+                        queried_result.append(data)
             else:
-                result = queried_result
+                raise ValueError(
+                    f"Specified operator '{operator}' was blocked for the security."
+                )
+
+            result = queried_result
         return result
 
     def __conditions_filter(
