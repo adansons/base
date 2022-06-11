@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "base"
-version = "0.1.1"
+version = "0.1.2"
 description = "Adansons Base"
 authors = ["Adansons Developers <engineer@adansons.co.jp>"]
 packages = [
@@ -11,7 +11,7 @@ packages = [
 base = 'base.cli:main'
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8,<3.11"
 click = "==8.0.4"
 requests = ">=1.0.0"
 numpy = ">=1.15"

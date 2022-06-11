@@ -22,5 +22,5 @@ if not os.path.exists(CONFIG_FILE):
 if not os.path.exists(PROJECT_FILE):
     open(PROJECT_FILE, "w").close()
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 __version__ = VERSION
