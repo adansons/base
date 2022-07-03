@@ -11,6 +11,7 @@ import base64
 import requests
 from typing import Optional, List, Union
 import time
+import asyncio
 from colorama import Fore, init
 
 from base.files import Files
@@ -362,7 +363,10 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                     "Failed to parse path with specified rule. tell me detail parsing rule."
                 )
 
-        for f in files:
+        hash_dict = {}
+        file_len = len(files)
+
+        async def async_calc_hash(f, hook=None):
             meta_data = {}
 
             # calculation hash value and update meta data dictionary
@@ -377,7 +381,27 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                 meta_data_from_path = parser(f.split(dir_path)[-1].replace(os.sep, "/"))
                 meta_data.update(meta_data_from_path)
 
-            data_list.append(meta_data)
+            if hook:
+                hook(len(hash_dict))
+            return meta_data
+
+        async def parallel_by_gather():
+            def notify(finished_num):
+                epoch = 50
+                bar = "=" * math.floor(
+                    ((finished_num * epoch) / file_len)
+                ) + "." * math.ceil((epoch - (finished_num * epoch) / file_len))
+                print(f"\r[{bar}] {finished_num}/{file_len}", end="")
+
+            cors = [async_calc_hash(f, hook=notify) for f in files]
+            results = await asyncio.gather(*cors)
+            return results
+
+        print("Calculate filehash...")
+        loop = asyncio.get_event_loop()
+        data_list = loop.run_until_complete(parallel_by_gather())
+        print()
+
         # create local datafile linker
         linked_hash_location = os.path.join(
             LINKER_DIR, self.project_uid, "linked_hash.json"
