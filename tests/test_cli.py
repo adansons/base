@@ -6,6 +6,7 @@
 import os
 
 import time
+from unittest import result, runner
 from click.testing import CliRunner
 from base.cli import (
     create_table,
@@ -328,6 +329,13 @@ def test_search_files():
     result = runner.invoke(search_files, [PROJECT_NAME, "-q", "title == sample"])
     assert result.exit_code == 0
     assert "1 files" in result.output
+
+
+def test_search_files_export_exception():
+    time.sleep(5)
+    runner = CliRunner()
+    result = runner.invoke(search_files, [PROJECT_NAME, "--export"])
+    assert "You can specify ‘json’ or ‘csv’ as export-file-type" in result.output
 
 
 def test_get_project_member():
