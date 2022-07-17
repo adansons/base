@@ -63,7 +63,7 @@ def search_export_exception(cmd, info_name, exc):
     None
     """
     # send error info to rollbar, etc, here
-    if "'--export' requires an argument" or "'--e' requires an argument" in str(exc):
+    if ("'--export' requires an argument" or "'--e' requires an argument") in str(exc):
         click.echo("You can specify ‘json’ or ‘csv’ as export-file-type")
     else:
         click.echo("Raised error: {}".format(exc))
