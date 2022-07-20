@@ -11,6 +11,7 @@ import base64
 import requests
 from typing import Optional, List, Union
 import time
+import concurrent.futures
 from colorama import Fore, init
 
 from base.files import Files
@@ -362,22 +363,33 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                     "Failed to parse path with specified rule. tell me detail parsing rule."
                 )
 
-        for f in files:
+        hash_dict = {}
+
+        def calc_hash(file):
             meta_data = {}
 
             # calculation hash value and update meta data dictionary
-            hash_value = calc_file_hash(f)
+            hash_value = calc_file_hash(file)
             meta_data["FileHash"] = hash_value
             hash_dict[hash_value] = (
-                os.path.abspath(f).replace(os.sep, "/").replace("/", os.sep)
+                os.path.abspath(file).replace(os.sep, "/").replace("/", os.sep)
             )
             meta_data.update(attributes)
 
             if parser is not None:
-                meta_data_from_path = parser(f.split(dir_path)[-1].replace(os.sep, "/"))
+                meta_data_from_path = parser(
+                    file.split(dir_path)[-1].replace(os.sep, "/")
+                )
                 meta_data.update(meta_data_from_path)
 
             data_list.append(meta_data)
+
+        print("Calculate filehash...")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            for file in files:
+                executor.submit(calc_hash, file)
+        print()
+
         # create local datafile linker
         linked_hash_location = os.path.join(
             LINKER_DIR, self.project_uid, "linked_hash.json"
