@@ -28,6 +28,7 @@ from base.config import (
     update_project_info,
     get_user_id_from_db,
 )
+from .exception import CatchAllExceptions, search_export_exception
 
 
 def base_config(func):
@@ -564,7 +565,11 @@ def import_metafile(
         click.echo("Success!")
 
 
-@main.command(name="search", help="search files")
+@main.command(
+    name="search",
+    help="search files",
+    cls=CatchAllExceptions(click.Command, handler=search_export_exception),
+)
 @click.argument("project")
 @click.option(
     "-q",
