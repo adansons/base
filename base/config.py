@@ -110,9 +110,12 @@ def get_project_uid(user_id: str, project_name: str) -> str:
     config = configparser.ConfigParser()
     config.read(PROJECT_FILE)
 
-    project_uid = config[user_id][project_name]
-
-    return project_uid
+    is_exist = check_project_exists(user_id, project_name)
+    if not is_exist:
+        raise KeyError(f"Project {project_name} does not exist.")
+    else:
+        project_uid = config[user_id][project_name]
+        return project_uid
 
 
 def check_project_exists(user_id: str, project_name: str) -> bool:
