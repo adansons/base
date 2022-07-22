@@ -27,6 +27,7 @@ from base.config import (
     register_user_id,
     update_project_info,
     get_user_id_from_db,
+    check_project_available,
 )
 
 
@@ -111,6 +112,7 @@ def create_table(project, user_id):
     """
     try:
         project_uid = create_project(user_id, project)
+        check_project_available(user_id, project_uid)
     except Exception as e:
         print(e)
     else:
