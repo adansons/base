@@ -11,10 +11,11 @@ import base64
 import requests
 from typing import Optional, List, Union
 import time
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 from colorama import Fore, init
 
 from base.files import Files
+from base.spinner import Spinner
 from base.parser import Parser
 from base.hash import calc_file_hash
 from base.config import (
@@ -363,8 +364,6 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                     "Failed to parse path with specified rule. tell me detail parsing rule."
                 )
 
-        hash_dict = {}
-
         def calc_hash(file):
             meta_data = {}
 
@@ -384,17 +383,16 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
 
             data_list.append(meta_data)
 
-        print("Calculate filehash...")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        with Spinner(
+            text="Calculating filehashs...", etext="Calculating filehashs... Done."
+        ), ThreadPoolExecutor(max_workers=2) as executor:
             for file in files:
                 executor.submit(calc_hash, file)
-        print()
 
         # create local datafile linker
         linked_hash_location = os.path.join(
             LINKER_DIR, self.project_uid, "linked_hash.json"
         )
-
         os.makedirs(os.path.dirname(linked_hash_location), exist_ok=True)
 
         if os.path.exists(linked_hash_location):
@@ -411,35 +409,30 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         limit_record_size = 10000
         split_count = math.ceil(len(data_list) / limit_record_size)
         split_data_num = math.ceil(len(data_list) / split_count)
+        file_num = len(data_list)
 
         lap_time = []
         for s in range(split_count):
             mean_lap_time = 25 if not lap_time else sum(lap_time) // len(lap_time)
             minute = (split_count - s) * mean_lap_time // 60
             second = (split_count - s) * mean_lap_time % 60
-            len_time = len(f"{minute}m {second}s")
-            print(
-                f"\r{s*10000}/{len(data_list)} files uploaded, estimated time "
-                + " " * (len("**m **s") - len_time)
-                + f"{minute}m {second}s",
-                end="",
-            )
-            start = time.time()
+            text = f"{s*10000}/{file_num}, estimated time: {minute}m {second}s"
+
             items = {"Items": data_list[s * split_data_num : (s + 1) * split_data_num]}
             url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
-            res = requests.post(url, json.dumps(items), headers=HEADER)
-            lap_time.append(int(time.time() - start))
 
-            if res.status_code != 200:
-                print()
-                raise Exception("Failed to upload meta data.")
+            start = time.time()
+            etext = (
+                "Uploading data... Done." if len(lap_time) == split_count - 1 else ""
+            )
+            with Spinner(text=f"Uploading data... {text}", etext=etext):
+                res = requests.post(url, json.dumps(items), headers=HEADER)
+                if res.status_code != 200:
+                    raise Exception("Failed to upload meta data.")
 
-        print(
-            f"\r{len(data_list)}/{len(data_list)} files uploaded."
-            + " " * len(", estimated time **m **s")
-        )
+            end = time.time()
+            lap_time.append(int(end - start))
 
-        file_num = len(data_list)
         return file_num
 
     def extract_metafile(
@@ -473,29 +466,30 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         Exception
             raises if something went wrong on uploading request to server
         """
-        _, ext = os.path.splitext(file_path)
-        if ext.lower() not in [".csv", ".xlsx"]:
-            raise ValueError(
-                f"{ext} file is not supported. Currently only suports csv or xlsx file."
-            )
+        with Spinner("extracting tables...", overwrite=False):
+            _, ext = os.path.splitext(file_path)
+            if ext.lower() not in [".csv", ".xlsx"]:
+                raise ValueError(
+                    f"{ext} file is not supported. Currently only suports csv or xlsx file."
+                )
 
-        with open(file_path, "rb") as f:
-            data = f.read()
+            with open(file_path, "rb") as f:
+                data = f.read()
 
-        data = base64.b64encode(data).decode()
-        item = {"Items": data}
-        item["is_csv"] = 1 if ext == ".csv" else 0
-        item["common_keyvalue"] = attributes
+            data = base64.b64encode(data).decode()
+            item = {"Items": data}
+            item["is_csv"] = 1 if ext == ".csv" else 0
+            item["common_keyvalue"] = attributes
 
-        # extract and parse external file
-        url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}/meta_file?user={self.user_id}"
-        res = requests.post(url, json.dumps(item), headers=HEADER)
-        if res.status_code != 200:
-            raise Exception("Failed to extract and parse external file.")
+            # extract and parse external file
+            url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}/meta_file?user={self.user_id}"
+            res = requests.post(url, json.dumps(item), headers=HEADER)
+            if res.status_code != 200:
+                raise Exception("Failed to extract and parse external file.")
 
-        s3_presigned_url = res.json()["URL"]
-        res = requests.get(s3_presigned_url)
-        tables = res.json()["Items"]
+            s3_presigned_url = res.json()["URL"]
+            res = requests.get(s3_presigned_url)
+            tables = res.json()["Items"]
 
         if verbose != 0:
             print(f"{len(tables)} tables found! ({file_path})\n")
@@ -530,9 +524,6 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         Exception
             raises if something went wrong on uploading request to server
         """
-        if verbose in [0, 1, 2]:
-            print("now estimating the rule for table joining...")
-
         if not (tables or file_path):
             raise ValueError("You have to specify 'tables' or 'file_path'.")
 
@@ -558,19 +549,19 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                         "Specified file looks like messy. Base will extract tables from it."
                     )
                 extracted_tables = self.extract_metafile(file_path=file_path, verbose=1)
-                for extracted_table in extracted_tables:
-                    tables.append(extracted_table)
+                tables += extracted_tables
 
-        join_rules = []
-        for table in tables:
-            url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
-            payload = {"Items": table}
-            res = requests.put(url, json.dumps(payload), headers=HEADER)
-            if res.status_code != 200:
-                raise Exception("Failed to estimate the joining rule")
+        with Spinner("now estimating the rule for table joining...", overwrite=False):
+            join_rules = []
+            for table in tables:
+                url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}?user={self.user_id}"
+                payload = {"Items": table}
+                res = requests.put(url, json.dumps(payload), headers=HEADER)
+                if res.status_code != 200:
+                    raise Exception("Failed to estimate the joining rule")
 
-            join_rule = res.json()["UpdateRule"]
-            join_rules.append(json.dumps(join_rule, ensure_ascii=False))
+                join_rule = res.json()["UpdateRule"]
+                join_rules.append(json.dumps(join_rule, ensure_ascii=False))
 
         if verbose != 0:
             print(f"{len(join_rules)} table joining rule was estimated! ({file_path})")
@@ -647,7 +638,7 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
 
         # get update_rule for each table
         if not (join_rule or join_rule_path):
-            join_rules = self.estimate_join_rule(tables=tables, verbose=verbose)
+            join_rules = self.estimate_join_rule(tables=tables, verbose=0)
             table_rule_pair = {}
             for table, join_rule in zip(tables, join_rules):
                 if join_rule in table_rule_pair:
@@ -718,21 +709,45 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                     else:
                         update_rule_for_add[key] = f"ADD:{key}"
                 url = f"{BASE_API_ENDPOINT}/project/{self.project_uid}/files?user={self.user_id}"
-                for i, table in enumerate(tables):
-                    if i == 0:
-                        payload = {"Items": table, "UpdateRule": update_rule}
-                    else:
-                        payload = {
-                            "Items": table,
-                            "UpdateRule": update_rule_for_add,
-                        }
-                    res = requests.put(
-                        url,
-                        json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-                        headers=HEADER,
-                    )
-                    if res.status_code != 200:
-                        raise Exception("Failed to join the tables")
+
+                with Spinner(
+                    text="Joining tables...",
+                    etext=f"{len(tables)} tables have been joined!",
+                ):
+                    for i, table in enumerate(tables):
+                        if i == 0:
+                            payload = {"Items": table, "UpdateRule": update_rule}
+                        else:
+                            payload = {
+                                "Items": table,
+                                "UpdateRule": update_rule_for_add,
+                            }
+                        try:
+                            res = requests.get(
+                                url=url,
+                                data=json.dumps(payload),
+                                headers=HEADER,
+                                timeout=20,
+                            )
+                        except:
+                            is_completed = False
+                            while not is_completed:
+                                res = requests.get(
+                                    url=f"{BASE_API_ENDPOINT}/project/{self.project_uid}/tables/status/contents?user={self.user_id}",
+                                    headers=HEADER,
+                                )
+                                if res.status_code != 200:
+                                    raise Exception(
+                                        "Something went wrong. Please try again."
+                                    )
+                                status = res.json()["ContensStatus"]
+                                if status == "Updating":
+                                    time.sleep(2)
+                                elif status == "Available":
+                                    is_completed = True
+                                else:  # Failure
+                                    raise Exception("Failed to join the tables")
+
         elif approved == "m" and (not join_rule_path):
             join_rules_info = {
                 "RequestedTime": time.time(),
