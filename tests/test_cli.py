@@ -331,13 +331,6 @@ def test_search_files():
     assert "1 files" in result.output
 
 
-def test_search_files_export_exception():
-    time.sleep(5)
-    runner = CliRunner()
-    result = runner.invoke(search_files, [PROJECT_NAME, "--export"])
-    assert "You can specify ‘json’ or ‘csv’ as export-file-type" in result.output
-
-
 def test_get_project_member():
     runner = CliRunner()
     result = runner.invoke(show_project_detail, [PROJECT_NAME, "--member-list"])
