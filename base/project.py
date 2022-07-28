@@ -108,7 +108,9 @@ def get_projects(user_id: str, archived: bool = False) -> List[dict]:
         project_list = res.json()["Projects"]
         return project_list
     else:
-        raise Exception(f"{res.status_code} : Something went wrong")
+        raise Exception(
+            f"{res.status_code} : There is no such project or it has already been archived. Please add the --confirm option to the command if you wish to delete the project."
+        )
 
 
 def archive_project(user_id: str, project_name: str):
