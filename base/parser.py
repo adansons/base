@@ -32,7 +32,7 @@ class Parser:
         Then, self.unuse_strs is `["hoge", "fuga"]`.
     """
 
-    def __init__(self, parsing_rule: str, sep: Optional[str] = None) -> None:
+    def __init__(self, parsing_rule: str, extension: str, sep: Optional[str] = None) -> None:
         """
         Parameters
         ----------
@@ -50,6 +50,7 @@ class Parser:
             self.sep = sep
 
         self.parsing_rule = parsing_rule
+        self.extension = extension
         self.__generate_parser()
 
     def __generate_parser(self, is_update: bool = False) -> None:
@@ -150,6 +151,9 @@ class Parser:
         ---------------------
         parsable_flag : bool
         """
+        if path.startswith(self.sep):
+            path = (self.sep).join(path.split(self.sep)[1:])
+
         parsable_flag = True
         try:
             path = self.convert_path_to_parsable_format(path)
@@ -167,6 +171,9 @@ class Parser:
         parsable_parsing_rule: str
             ex.) `{_}/{num1}/{fuga}/{num2}.txt`
         """
+        if not self.parsing_rule.endswith("."+self.extension):
+            self.parsing_rule += "."+self.extension
+
         self.unuse_strs = self.extract_unuse_str()
 
         for not_use_str in self.unuse_strs:
@@ -209,9 +216,6 @@ class Parser:
                 closure_cnt += 1
                 split_cnt = 0
 
-            elif s == ".":
-                parsable_format_path += "}" + s
-
             else:
                 if s in self.splitters:
                     split_cnt += 1
@@ -228,8 +232,6 @@ class Parser:
             ex) `["hoge", "/fuga"]`
         """
         parsing_rule_ = self.parsing_rule
-        if "." in self.parsing_rule:
-            parsing_rule_ = ".".join(parsing_rule_.split(".")[:-1])
 
         # switch `{XX}` to `}XX{`
         parsing_rule_ = parsing_rule_.replace("{", "[RPTRight]").replace(
@@ -273,15 +275,12 @@ class Parser:
             ex) `["hoge", "fuga"]`
         """
         sub_splitters = self.extract_sub_splitters()
-
-        str_pattern = re.compile("[^!-/:-@[-`{-~]")
+        str_pattern = re.compile("[^!-/:-@[-`{-~]+")
 
         unuse_strs = []
         for sub_sp in sub_splitters:
             strs = re.findall(str_pattern, sub_sp)
-            if len(strs) == 0:
-                continue
-            unuse_strs.append("".join(strs))
+            unuse_strs.extend(strs)
 
         return unuse_strs
 
@@ -326,8 +325,15 @@ class Parser:
             path = path.replace(unuse_str, self.sep + unuse_str + self.sep)
 
         path = path.replace(self.sep * 3, self.sep)
+        
+        splitters = sorted(list(set(self.splitters)))
 
-        for splitter in set(self.splitters):
+        # Put "/" at the last position in `splitters`        
+        if self.sep in splitters:
+            splitters.remove(self.sep)
+            splitters.append(self.sep)
+
+        for splitter in splitters:
             path = path.replace(splitter + self.sep, self.sep).replace(
                 self.sep + splitter, self.sep
             )
