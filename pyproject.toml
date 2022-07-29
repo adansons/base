@@ -19,6 +19,7 @@ scikit-learn = ">=0.10"
 PyYAML = "^6.0"
 "ruamel.yaml" = "^0.17.21"
 colorama = "^0.4.4"
+pandas = "^1.4.3"
 
 [tool.poetry.dev-dependencies]
 black = "^21.12b0"
