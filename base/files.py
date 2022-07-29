@@ -260,8 +260,15 @@ class Files:
         def number_to_int(obj: str):
             return int(obj) if obj.isdigit() else obj
 
-        def natural_keys(obj):
-            return [number_to_int(c) for c in re.split(r"(\d+)", str(obj))]
+        def natural_keys(primary_class: str):
+            def sort_funcion(obj):
+                try:
+                    keys = [eval(primary_class)(obj)]
+                except:
+                    keys = [number_to_int(c) for c in re.split(r"(\d+)", str(obj))]
+                finally:
+                    return keys
+            return sort_funcion
 
         unquote = lambda v: v.lstrip("'").rstrip("'").lstrip('"').rstrip('"')
 
@@ -309,13 +316,13 @@ class Files:
             elif operator in [">", ">="]:
                 for data in result:
                     if key in data:
-                        s = sorted([data[key], value], key=natural_keys)
+                        s = sorted([data[key], value], key=natural_keys(data[key].__class__.__name__))
                         if s[0] == value:
                             queried_result.append(data)
             elif operator in ["<", "<="]:
                 for data in result:
                     if key in data:
-                        s = sorted([data[key], value], key=natural_keys)
+                        s = sorted([data[key], value], key=natural_keys(data[key].__class__.__name__))
                         if s[1] == value:
                             queried_result.append(data)
             elif operator in ["is", "is not"]:
