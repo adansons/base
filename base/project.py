@@ -723,7 +723,7 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
                                 "UpdateRule": update_rule_for_add,
                             }
                         try:
-                            res = requests.get(
+                            res = requests.put(
                                 url=url,
                                 data=json.dumps(payload),
                                 headers=HEADER,
