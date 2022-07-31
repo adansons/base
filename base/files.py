@@ -268,6 +268,7 @@ class Files:
                     keys = [number_to_int(c) for c in re.split(r"(\d+)", str(obj))]
                 finally:
                     return keys
+
             return sort_funcion
 
         unquote = lambda v: v.lstrip("'").rstrip("'").lstrip('"').rstrip('"')
@@ -316,13 +317,19 @@ class Files:
             elif operator in [">", ">="]:
                 for data in result:
                     if key in data:
-                        s = sorted([data[key], value], key=natural_keys(data[key].__class__.__name__))
+                        s = sorted(
+                            [data[key], value],
+                            key=natural_keys(data[key].__class__.__name__),
+                        )
                         if s[0] == value:
                             queried_result.append(data)
             elif operator in ["<", "<="]:
                 for data in result:
                     if key in data:
-                        s = sorted([data[key], value], key=natural_keys(data[key].__class__.__name__))
+                        s = sorted(
+                            [data[key], value],
+                            key=natural_keys(data[key].__class__.__name__),
+                        )
                         if s[1] == value:
                             queried_result.append(data)
             elif operator in ["is", "is not"]:
