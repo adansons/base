@@ -108,9 +108,7 @@ def get_projects(user_id: str, archived: bool = False) -> List[dict]:
         project_list = res.json()["Projects"]
         return project_list
     else:
-        raise Exception(
-            f"{res.status_code} : There is no such project or it has already been archived. Please add the --confirm option to the command if you wish to delete the project."
-        )
+        raise Exception(f"{res.status_code} : Something went wrong")
 
 
 def archive_project(user_id: str, project_name: str):
@@ -136,7 +134,9 @@ def archive_project(user_id: str, project_name: str):
     res = requests.delete(url, headers=HEADER)
 
     if res.status_code != 200:
-        raise Exception(f"{res.status_code} : Something went wrong")
+        raise Exception(
+            f"{res.status_code} : There is no such project or it has already been archived. Please add the --confirm option to the command if you wish to delete the project."
+        )
 
 
 def delete_project(user_id: str, project_name: str):
