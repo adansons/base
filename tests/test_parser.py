@@ -24,9 +24,7 @@ PARSED_DICT1 = {
 
 INPUT_PATH2 = "/Origin/hoge1/fugasuzukipiyo_03.csv"
 PARSING_RULE2 = "{_}/hoge{num1}/fuga{name}piyo_{month}.csv"
-CONVERTED_PARSING_RULE2 = (
-    "{_}/{[UnuseToken]}/{num1}/{[UnuseToken]}/{name}/{[UnuseToken]}_{month}.{[UnuseToken]}"
-)
+CONVERTED_PARSING_RULE2 = "{_}/{[UnuseToken]}/{num1}/{[UnuseToken]}/{name}/{[UnuseToken]}_{month}.{[UnuseToken]}"
 PARSING_KEYS2 = [
     "_",
     "[UnuseToken]",
@@ -35,7 +33,7 @@ PARSING_KEYS2 = [
     "name",
     "[UnuseToken]",
     "month",
-    "[UnuseToken]"
+    "[UnuseToken]",
 ]
 PARSED_DICT2 = {"num1": "1", "name": "suzuki", "month": "03"}
 
@@ -50,7 +48,7 @@ PARSING_KEYS3 = [
     "name",
     "[UnuseToken]",
     "timestamp",
-    "[UnuseToken]"
+    "[UnuseToken]",
 ]
 PARSED_DICT3 = {"num1": "1", "name": "suzuki", "timestamp": "2022_03_02"}
 

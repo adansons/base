@@ -32,7 +32,9 @@ class Parser:
         Then, self.unuse_strs is `["hoge", "fuga"]`.
     """
 
-    def __init__(self, parsing_rule: str, extension: str, sep: Optional[str] = None) -> None:
+    def __init__(
+        self, parsing_rule: str, extension: str, sep: Optional[str] = None
+    ) -> None:
         """
         Parameters
         ----------
@@ -171,8 +173,8 @@ class Parser:
         parsable_parsing_rule: str
             ex.) `{_}/{num1}/{fuga}/{num2}.txt`
         """
-        if not self.parsing_rule.endswith("."+self.extension):
-            self.parsing_rule += "."+self.extension
+        if not self.parsing_rule.endswith("." + self.extension):
+            self.parsing_rule += "." + self.extension
 
         self.unuse_strs = self.extract_unuse_str()
 
@@ -325,10 +327,10 @@ class Parser:
             path = path.replace(unuse_str, self.sep + unuse_str + self.sep)
 
         path = path.replace(self.sep * 3, self.sep)
-        
+
         splitters = sorted(list(set(self.splitters)))
 
-        # Put "/" at the last position in `splitters`        
+        # Put "/" at the last position in `splitters`
         if self.sep in splitters:
             splitters.remove(self.sep)
             splitters.append(self.sep)
