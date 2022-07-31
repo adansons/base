@@ -368,15 +368,17 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
             meta_data = {}
 
             # calculation hash value and update meta data dictionary
-            hash_value = calc_file_hash(f)
+            hash_value = calc_file_hash(file)
             meta_data["FileHash"] = hash_value
             hash_dict[hash_value] = (
-                os.path.abspath(f).replace(os.sep, "/").replace("/", os.sep)
+                os.path.abspath(file).replace(os.sep, "/").replace("/", os.sep)
             )
             meta_data.update(attributes)
 
             if parser is not None:
-                meta_data_from_path = parser(f.split(dir_path)[-1].replace(os.sep, "/"))
+                meta_data_from_path = parser(
+                    file.split(dir_path)[-1].replace(os.sep, "/")
+                )
                 meta_data.update(meta_data_from_path)
 
             data_list.append(meta_data)
