@@ -437,6 +437,9 @@ def import_dataset(project, directory, extension, parse, additional):
     click.echo("Check datafiles...")
     files = glob.glob(os.path.join(directory, "**", f"*.{extension}"), recursive=True)
     click.echo(f"found {len(files)} files with {extension} extension.")
+    assert (
+        len(files) > 0
+    ), "No datafiles found. Please check your directory and extension."
 
     if parse is None:
         sample_file_path = files[0].split(directory)[-1]
