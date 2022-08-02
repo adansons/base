@@ -682,6 +682,8 @@ def search_files(
                     f.write(output_csv)
             else:
                 click.echo(f"Sorry, export file type: {export} was not supprted yet...")
+        elif export is None and output is not None:
+            click.echo("\nPlease specify export file type. (e.g. --export json)")
 
 
 @main.command(name="invite", help="invite project member")
