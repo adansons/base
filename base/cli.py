@@ -49,7 +49,7 @@ def base_config(func):
                         "Please register your access key", type=str, default="none"
                     )
                     if access_key == "none":
-                        print(
+                        click.echo(
                             "\nGet invitation from here!\n-> https://share.hsforms.com/16OxTF7eJRPK92oGCny7nGw8moen\n"
                         )
                         sys.exit()
@@ -115,7 +115,7 @@ def create_table(project, user_id):
         project_uid = create_project(user_id, project)
         check_project_available(user_id, project_uid)
     except Exception as e:
-        print(e)
+        click.echo(e)
     else:
         click.echo(
             f"Your Project UID\n----------------\n{project_uid}\n\nsave Project UID in local file (~/.base/projects)"
@@ -143,7 +143,7 @@ def list_project(archived, user_id):
     try:
         project_list = get_projects(user_id, archived=archived)
     except Exception as e:
-        print(e)
+        click.echo(e)
     else:
         click.echo("projects\n========")
         for project in project_list:
@@ -195,7 +195,7 @@ def remove_project(confirm, project, user_id, member):
             try:
                 delete_project(user_id, project)
             except Exception as e:
-                print(e)
+                click.echo(e)
 
             else:
                 click.echo(f"{project} was Deleted")
@@ -204,7 +204,7 @@ def remove_project(confirm, project, user_id, member):
             try:
                 archive_project(user_id, project)
             except Exception as e:
-                print(e)
+                click.echo(e)
             else:
                 click.echo(f"{project} was Archived")
     else:
@@ -213,7 +213,7 @@ def remove_project(confirm, project, user_id, member):
         try:
             pjt.remove_member(member)
         except Exception as e:
-            print(e)
+            click.echo(e)
         else:
             click.echo(f"{','.join(member)} was removed from {project}")
 
@@ -249,7 +249,7 @@ def show_project_detail(project, user_id, member_list):
             key_list = pjt.get_metadata_summary()
             summary_for_print = summarize_keys_information(key_list)
         except Exception as e:
-            print(e)
+            click.echo(e)
         else:
             click.echo(
                 f"project {project}\n===============\nYou have {summary_for_print['MaxRecordedCount']} records with {summary_for_print['UniqueKeyCount']} keys in this project.\n\n[Keys Information]\n"
@@ -273,7 +273,7 @@ def show_project_detail(project, user_id, member_list):
         try:
             member_list = pjt.get_members()
         except Exception as e:
-            print(e)
+            click.echo(e)
         else:
             click.echo("project Members\n===============")
             for column in member_list:
@@ -461,7 +461,7 @@ path to your file: {sample_file_path}"
             detail_parsing_rule=None,
         )
     except ValueError as e:
-        print(e)
+        click.echo(e)
         click.echo(
             f"\nCan't parse uniquely with parsing rule: {parse}\n\
 Please tell me detail parsing rule in accordance with the actual path.\n\
@@ -483,11 +483,11 @@ path to your file: {files[0].split(directory)[-1]}"
                 detail_parsing_rule=detail_parse,
             )
         except Exception as e:
-            print(e)
+            click.echo(e)
         else:
             click.echo("Success!")
     except Exception as e:
-        print(e)
+        click.echo(e)
     else:
         click.echo("Success!")
 
@@ -562,7 +562,7 @@ def import_metafile(
                 verbose=1,
             )
     except Exception as e:
-        print(e)
+        click.echo(e)
     else:
         click.echo("Success!")
 
@@ -628,7 +628,7 @@ def search_files(
         else:
             result = pjt.files(query=query).result
     except Exception as e:
-        print(e)
+        click.echo(e)
     else:
         click.echo(f"{len(result)} files")
         if not summary:
@@ -726,14 +726,14 @@ def invite_member(project, member, permission, update, user_id):
         try:
             pjt.add_member(member, permission)
         except Exception as e:
-            print(e)
+            click.echo(e)
         else:
             click.echo(f"Successfully invited {member} into {project} as {permission}")
     else:
         try:
             pjt.update_member(member, permission)
         except Exception as e:
-            print(e)
+            click.echo(e)
         else:
             click.echo(f"Successfully update {member}'s permission to {permission}")
 
@@ -790,7 +790,7 @@ def data_link(project, directory, extension, user_id):
     try:
         file_num = pjt.link_datafiles(directory, extension)
     except Exception as e:
-        print(e)
+        click.echo(e)
     else:
         click.echo("Check datafiles...")
         click.echo(f"found {file_num} files with {extension} extension.")
