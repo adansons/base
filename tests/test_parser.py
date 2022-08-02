@@ -12,9 +12,9 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from base.parser import Parser
 
 
-INPUT_PATH1 = "Origin/左声帯嚢胞/1-055-E-a01.wav"
+INPUT_PATH1 = "/Origin/左声帯嚢胞/1-055-E-a01.wav"
 PARSING_RULE1 = "{_}/{disease}/{_}-{patient-id}-{part}-{iteration}.wav"
-PARSING_KEYS1 = ["_", "disease", "_", "patient-id", "part", "iteration"]
+PARSING_KEYS1 = ["_", "disease", "_", "patient-id", "part", "iteration", "[UnuseToken]"]
 PARSED_DICT1 = {
     "disease": "左声帯嚢胞",
     "patient-id": "055",
@@ -22,11 +22,9 @@ PARSED_DICT1 = {
     "iteration": "a01",
 }
 
-INPUT_PATH2 = "Origin/hoge1/fugasuzukipiyo_03.csv"
+INPUT_PATH2 = "/Origin/hoge1/fugasuzukipiyo_03.csv"
 PARSING_RULE2 = "{_}/hoge{num1}/fuga{name}piyo_{month}.csv"
-CONVERTED_PARSING_RULE2 = (
-    "{_}/{[UnuseToken]}/{num1}/{[UnuseToken]}/{name}/{[UnuseToken]}_{month}.csv"
-)
+CONVERTED_PARSING_RULE2 = "{_}/{[UnuseToken]}/{num1}/{[UnuseToken]}/{name}/{[UnuseToken]}_{month}.{[UnuseToken]}"
 PARSING_KEYS2 = [
     "_",
     "[UnuseToken]",
@@ -35,10 +33,11 @@ PARSING_KEYS2 = [
     "name",
     "[UnuseToken]",
     "month",
+    "[UnuseToken]",
 ]
 PARSED_DICT2 = {"num1": "1", "name": "suzuki", "month": "03"}
 
-INPUT_PATH3 = "Origin/hoge1/fugasuzukipiyo_2022_03_02.csv"
+INPUT_PATH3 = "/Origin/hoge1/fugasuzukipiyo_2022_03_02.csv"
 PARSING_RULE3 = "{_}/hoge{num1}/fuga{name}piyo_{timestamp}.csv"
 DETAIL_PARSING_RULE = "{Origin}/hoge{1}/fuga{suzuki}piyo_{2022_03_02}.csv"
 PARSING_KEYS3 = [
@@ -49,48 +48,49 @@ PARSING_KEYS3 = [
     "name",
     "[UnuseToken]",
     "timestamp",
+    "[UnuseToken]",
 ]
 PARSED_DICT3 = {"num1": "1", "name": "suzuki", "timestamp": "2022_03_02"}
 
 
 def test_generate_parser_pattern1():
-    parser = Parser(PARSING_RULE1)
+    parser = Parser(PARSING_RULE1, extension="wav")
     assert parser.parsing_keys == PARSING_KEYS1
 
 
 def test_parse_pattern1():
-    parser = Parser(PARSING_RULE1)
+    parser = Parser(PARSING_RULE1, extension="wav")
     parsed_dict = parser(INPUT_PATH1)
     assert parsed_dict == PARSED_DICT1
 
 
 def test_generate_parser_pattern2():
-    parser = Parser(PARSING_RULE2)
+    parser = Parser(PARSING_RULE2, extension="csv")
     assert parser.parsing_keys == PARSING_KEYS2
     assert parser.parsing_rule == CONVERTED_PARSING_RULE2
 
 
 def test_parse_pattern2():
-    parser = Parser(PARSING_RULE2)
+    parser = Parser(PARSING_RULE2, extension="csv")
     parsed_dict = parser(INPUT_PATH2)
     assert parsed_dict == PARSED_DICT2
 
 
 def test_generate_parser_pattern3():
-    parser = Parser(PARSING_RULE3)
+    parser = Parser(PARSING_RULE3, extension="csv")
     parser.update_rule(DETAIL_PARSING_RULE)
     assert parser.parsing_keys == PARSING_KEYS3
 
 
 def test_parse_pattern3():
-    parser = Parser(PARSING_RULE3)
+    parser = Parser(PARSING_RULE3, extension="csv")
     parser.update_rule(DETAIL_PARSING_RULE)
     parsed_dict = parser(INPUT_PATH3)
     assert parsed_dict == PARSED_DICT3
 
 
 def test_is_path_parsable():
-    parser = Parser(PARSING_RULE3)
+    parser = Parser(PARSING_RULE3, extension="csv")
 
     # Check for `IndexError` when parsing the file path with invalid `parsing_rule`.
     with pytest.raises(Exception) as e:

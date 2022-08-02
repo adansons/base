@@ -352,7 +352,7 @@ class Project:
 
         parser = None
         if parsing_rule is not None:
-            parser = Parser(parsing_rule)
+            parser = Parser(parsing_rule, extension=extension)
             if detail_parsing_rule is not None:
                 parser.update_rule(detail_parsing_rule)
             if not parser.validate_parsing_rule():
