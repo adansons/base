@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "base"
-version = "0.1.2"
+version = "0.1.3"
 description = "Adansons Base"
 authors = ["Adansons Developers <engineer@adansons.co.jp>"]
 packages = [
