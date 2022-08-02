@@ -12,6 +12,7 @@ import requests
 from typing import Optional, List, Union
 import time
 from concurrent.futures import ThreadPoolExecutor
+import pandas as pd
 from colorama import Fore, init
 
 from base.files import Files
@@ -468,6 +469,42 @@ Make sure that the key is enclosed with `{{}}` in the parsing_rule."
         Exception
             raises if something went wrong on uploading request to server
         """
+        _, ext = os.path.splitext(file_path)
+        tmp_file_path = os.path.join(
+            os.path.dirname(file_path), f"tmp_{os.path.basename(file_path)}"
+        )
+        if ext.lower() == ".csv":
+            df = pd.read_csv(file_path, header=0)
+            if "FilePath" in df:
+                linked_hash_location = os.path.join(
+                    LINKER_DIR, self.project_uid, "linked_hash.json"
+                )
+                with open(linked_hash_location, "r", encoding="utf-8") as f:
+                    exist_hash_dict = json.loads(f.read())
+                path_to_hash = {v: k for k, v in exist_hash_dict.items()}
+                df["FileHash"] = df["FilePath"].apply(lambda x: path_to_hash[x])
+                del df["FilePath"]
+                df.to_csv(tmp_file_path, encoding="utf-8", index=False)
+            else:
+                tmp_file_path = file_path
+        elif ext.lower() == ".xlsx":
+            tmp_file_path = file_path
+        else:
+            raise ValueError(
+                f"{ext} file is not supported. Currently only suports csv or xlsx file."
+            )
+
+        with open(tmp_file_path, "rb") as f:
+            data = f.read()
+
+        if tmp_file_path != file_path:
+            os.remove(tmp_file_path)
+
+        data = base64.b64encode(data).decode()
+        item = {"Items": data}
+        item["is_csv"] = 1 if ext == ".csv" else 0
+        item["common_keyvalue"] = attributes
+
         with Spinner("extracting tables...", overwrite=False):
             _, ext = os.path.splitext(file_path)
             if ext.lower() not in [".csv", ".xlsx"]:
