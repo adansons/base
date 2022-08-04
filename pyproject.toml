@@ -22,7 +22,7 @@ colorama = "^0.4.4"
 pandas = "^1.4.3"
 
 [tool.poetry.dev-dependencies]
-black = "^22.12b0"
+black = "^21.12b0"
 pytest = "^6.2.5"
 mypy = "^0.931"
 boto3 = "^1.21.13"
