@@ -12,17 +12,17 @@ base = 'base.cli:main'
 
 [tool.poetry.dependencies]
 python = "^3.8,<3.11"
-click = "==8.0.4"
+click = ">=8.0.0"
 requests = ">=1.0.0"
-numpy = ">=1.15"
-scikit-learn = ">=0.10"
+numpy = ">=1.18.5"
+scikit-learn = ">=0.23.0"
 PyYAML = "^6.0"
 "ruamel.yaml" = "^0.17.21"
 colorama = "^0.4.4"
 pandas = "^1.4.3"
 
 [tool.poetry.dev-dependencies]
-black = "^21.12b0"
+black = "^22.12b0"
 pytest = "^6.2.5"
 mypy = "^0.931"
 boto3 = "^1.21.13"
