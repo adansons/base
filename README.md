@@ -43,7 +43,8 @@ Invitation Form: https://share.hsforms.com/1KG8Hp2kwSjC6fjVwwlklZA8moen
 Adansons Base contains Command Line Interface (CLI) and Python SDK, and you can install both with `pip` command.
 
 ```bash
-pip install git+https://github.com/adansons/base
+pip install -U pip
+pip install adansons-base
 ```
 
 > Note: if you want to use CLI in any directory, you have to install with the python globally installed on your computer.
