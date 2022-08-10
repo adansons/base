@@ -78,11 +78,11 @@ And then, Base will take below actions.
 - `-c <path-parsing-rule>`, `--parse <path-parsing-rule>` - specify `path-parsing-rule` to extract meta data from each data file path.
     
     ```
-    - you can use {{key-name}} to parse phrases with key.
-    - you can use {{_}} to ignore some phrases.
+    - you can use {key-name} to parse phrases with key.
+    - you can use {_} to ignore some phrases.
     - you have to use '/' as separator.
     
-    >>> sample parsing rule: {{}}/{{name}}/{{timestamp}}/{{sensor}}-{{condition}}{{iteration}}.csv
+    >>> sample parsing rule: {}/{name}/{timestamp}/{sensor}-{condition}{iteration}.csv
     ```
 The following options are used only when importing external files.
 - `-m`, `--external-file` - parse the content of external files which specified with `-p` option.

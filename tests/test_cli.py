@@ -6,6 +6,7 @@
 import os
 
 import time
+from unittest import result, runner
 from click.testing import CliRunner
 from base.cli import (
     create_table,

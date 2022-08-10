@@ -4,16 +4,20 @@
 # Please contact engineer@adansons.co.jp
 import os
 import json
+import time
 import requests
 import configparser
 
+from base.spinner import Spinner
 
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".base", "config")
 PROJECT_FILE = os.path.join(os.path.expanduser("~"), ".base", "projects")
 LINKER_DIR = os.path.join(os.path.expanduser("~"), ".base", "linker")
 
 HEADER = {"Content-Type": "application/json"}
-BASE_API_ENDPOINT = "https://api.base.adansons.co.jp"
+BASE_API_ENDPOINT = os.environ.get(
+    "BASE_API_ENDPOINT", "https://api.base.adansons.co.jp"
+)
 
 
 def get_user_id() -> str:
@@ -110,9 +114,12 @@ def get_project_uid(user_id: str, project_name: str) -> str:
     config = configparser.ConfigParser()
     config.read(PROJECT_FILE)
 
-    project_uid = config[user_id][project_name]
-
-    return project_uid
+    is_exist = check_project_exists(user_id, project_name)
+    if not is_exist:
+        raise KeyError(f"Project {project_name} does not exist.")
+    else:
+        project_uid = config[user_id][project_name]
+        return project_uid
 
 
 def check_project_exists(user_id: str, project_name: str) -> bool:
@@ -137,6 +144,38 @@ def check_project_exists(user_id: str, project_name: str) -> bool:
     project_exists = project_name in config[user_id]
 
     return project_exists
+
+
+def check_project_available(user_id: str, project_id: str) -> None:
+    """
+    Check project's tables available or not.
+
+    Parameters
+    ----------
+    user_id : str
+        user id
+    project_uid : str
+        target project uid
+    """
+    access_key = get_access_key()
+    HEADER.update({"x-api-key": access_key})
+
+    with Spinner(text="Creating the project, please wait..."):
+        is_available = False
+        while not is_available:
+            url = (
+                f"{BASE_API_ENDPOINT}/project/{project_id}/tables/status?user={user_id}"
+            )
+            res = requests.get(url, headers=HEADER)
+
+            if res.status_code != 200:
+                raise Exception("Something went wrong. Please try again.")
+
+            status = res.json()["Status"]
+            if status == "Creating":
+                time.sleep(1)
+            else:
+                is_available = True
 
 
 def register_project_uid(user_id: str, project: str, project_uid: str) -> None:

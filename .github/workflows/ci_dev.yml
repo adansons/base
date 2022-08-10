@@ -43,6 +43,7 @@ jobs:
         env:
           BASE_USER_ID: ${{ secrets.BASE_USER_ID }}
           BASE_ACCESS_KEY: ${{ secrets.BASE_ACCESS_KEY }}
+          BASE_API_ENDPOINT: ${{ secrets.BASE_API_ENDPOINT }}
 
   fix-format:
     runs-on: ubuntu-latest
